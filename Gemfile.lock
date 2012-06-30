@@ -1,9 +1,14 @@
-GEM
-  remote: http://rubygems.org/
+GIT
+  remote: git://github.com/kreynolds/cassandra-cql.git
+  revision: 108b7d3432d884746e0cf8823c791e5338797a00
   specs:
     cassandra-cql (1.0.4)
       simple_uuid (>= 0.2.0)
       thrift_client (>= 0.7.1)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
     git (1.2.5)
     jeweler (1.8.4)
       bundler (~> 1.0)
@@ -29,7 +34,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.0.0)
-  cassandra-cql
+  cassandra-cql!
   jeweler (~> 1.8.4)
   rdoc (~> 3.12)
   shoulda

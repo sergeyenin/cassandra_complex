@@ -4,7 +4,6 @@ $:.unshift(File.dirname( __FILE__) + '/lib/')
 
 require 'rubygems'
 require 'bundler'
-require 'cassandra_model_cql'
 
 begin
   Bundler.setup(:default, :development)
@@ -14,6 +13,7 @@ rescue Bundler::BundlerError => e
   exit e.status_code
 end
 require 'rake'
+require 'cassandra_model_cql'
 
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
