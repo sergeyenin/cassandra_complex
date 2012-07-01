@@ -11,6 +11,7 @@ module CassandraModelCql
     # @option options [String] :keyspace keyspace to which connect
     # @return [CassandraModelCql::Connection] new instance
     def initialize(hosts, options = {})
+      @keyspace = options[:keyspace] || 'system'
       @conn = CassandraCQL::Database.new(hosts, options.merge({:cql_version=>'3.0.0'}))
     end
 
@@ -18,15 +19,25 @@ module CassandraModelCql
     # @param [Array, String] cql_strings string with cql3 commands
     # @return [CassandraModeCql::RowSet] row set
     def query(cql_string)
-      row_sets = []
-      prepare_cql_statement(cql_string).each do |cql|
-        row_sets << @conn.execute(cql) unless cql.strip.empty?
+      row_set = RowSet.new(@conn)
+
+      begin
+        prepare_cql_statement(cql_string).each do |cql|
+          row_set << row_set.execute_query(cql) unless cql.strip.empty?
+        end
+      ensure
+        return row_set
       end
-      row_sets.flatten
     end
 
     def with_keyspace(kyspc)
-      raise NotImplementedError
+      old_keyspace, @keyspace = @keyspace, kyspc
+
+      query("use #{@keyspace};")
+      yield if block_given?
+      query("use #{old_keyspace};")
+ 
+      @keyspace = old_keyspace     
     end
 
     def batch_query(cql_multi_string, options={:write_consistency=>'ANY', :write_timestamp=>nil, :read_consistency=>'QUORUM', :read_timestamp=>nil})
