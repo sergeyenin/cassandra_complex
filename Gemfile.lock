@@ -33,7 +33,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.0.0)
+  bundler (~> 1.1.0)
   cassandra-cql!
   jeweler (~> 1.8.4)
   rdoc (~> 3.12)
