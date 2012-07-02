@@ -27,17 +27,17 @@ module CassandraModelCql
     def each(&blck)
       @rows.each(&blck)
     end
-    
+
     def last_command
       @cql_commands[-1]
     end
-    
+
     private
-    
+
     def add_rows(rws)
       return unless rws
 
-      rws.each do |row|
+      rws.fetch do |row|
         @rows.push(Row.new(row))
       end
     end
