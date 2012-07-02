@@ -35,6 +35,8 @@ module CassandraModelCql
     private
     
     def add_rows(rws)
+      return unless rws
+
       rws.each do |row|
         @rows.push(Row.new(row))
       end

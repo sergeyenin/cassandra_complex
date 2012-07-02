@@ -31,13 +31,17 @@ module CassandraModelCql
     end
 
     def with_keyspace(kyspc)
-      old_keyspace, @keyspace = @keyspace, kyspc
+      if kyspc != @keyspace.strip
+        old_keyspace, @keyspace = @keyspace, kyspc
 
-      query("use #{@keyspace};")
-      yield if block_given?
-      query("use #{old_keyspace};")
+        query("use #{@keyspace};")
+        yield if block_given?
+        query("use #{old_keyspace};")
  
-      @keyspace = old_keyspace     
+        @keyspace = old_keyspace
+      else
+        yield if block_given?
+      end
     end
 
     def batch_query(cql_multi_string, options={:write_consistency=>'ANY', :write_timestamp=>nil, :read_consistency=>'QUORUM', :read_timestamp=>nil})
