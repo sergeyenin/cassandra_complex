@@ -19,8 +19,8 @@ module CassandraModelCql
     # @param [Array, String] cql_strings string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @return [CassandraModeCql::RowSet] row set
-    def query(cql_string, multi_commands = true)
-      row_set = RowSet.new(@conn)
+    def query(cql_string, multi_commands = true, table=nil)
+      row_set = RowSet.new(@conn, table)
 
       begin
         prepare_cql_statement(cql_string, multi_commands).each do |cql|

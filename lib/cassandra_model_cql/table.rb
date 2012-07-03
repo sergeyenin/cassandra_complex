@@ -12,7 +12,7 @@ module CassandraModelCql
       end
 
       def primary_key
-        @primary_key ||= connection.conn.schema.column_families[table_name].columns.keys[0]
+        @primary_key ||= connection.conn.schema.column_families[table_name].cf_def.key_alias
         @primary_key
       end
 
@@ -22,7 +22,7 @@ module CassandraModelCql
 
         command = "SELECT * from #{table_name} #{where_clause}"
 
-        rs = connection.query(command)
+        rs = connection.query(command, true, self)
         rs.rows || {}
       end
 

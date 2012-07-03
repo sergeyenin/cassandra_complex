@@ -6,7 +6,8 @@ module CassandraModelCql
     attr_reader :rows, :cql_commands
     attr_reader :last_error, :last_error_command
 
-    def initialize(conn)
+    def initialize(conn, table=nil)
+      @table = table
       @conn = conn
       @rows = []
       @cql_commands = []
@@ -38,7 +39,7 @@ module CassandraModelCql
       return unless rws
 
       rws.fetch do |row|
-        @rows.push(Row.new(row))
+        @rows.push(Row.new({:thrift_row=>row, :table=>@table}))
       end
     end
   end
