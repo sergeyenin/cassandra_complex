@@ -1,14 +1,27 @@
 require 'active_support/hash_with_indifferent_access'
 
-#rough monkey-patch to access schema
+# Rough monkey-patch to CassandraCQL::Row for access schema
 module CassandraCQL
+  # CassandraCQL::Row
+  #
+  # @!attribute [r] schema
+  #   @return [CassandraCQL::Schema] Row schema
   class Row
     attr_reader :schema
   end
 end
 
 module CassandraModelCql
+
+  # CassandraModelCql::Row is hash like accessable row
   class Row < HashWithIndifferentAccess
+
+    # Create instance of Row
+    #
+    # @param [Hash] hsh
+    # @option hsh [CassandraCQL::Row] :thrift_row Thrift row
+    # @option hsh [CassandraModelCql::Table] :table Table which consist that row
+    # @return [CassandraModelCql::Row] new instance
     def initialize(hsh = {})
       thrift_row = hsh.delete(:thrift_row)
       @table = hsh.delete(:table)
@@ -19,13 +32,20 @@ module CassandraModelCql
       end
     end
 
+    # Rewriten []= assigner, which mark accessed value as dirty
+    #
+    # @param [String, Symbol] key The key of hash map
+    # @param val The value of hash map
     def []=(key, val)
       self[key].value = val
       self[key].dirty = true
     end
 
-    # TODO: dont dorget to implement validation
-    def save(perform_validation=false)
+    # @todo dont dorget to implement validation and callbacks
+    # Save the row
+    #
+    # @return [Boolean] if the row was saved successful
+    def save()
       return false unless @table
 
       table_name  = @table.to_s.downcase

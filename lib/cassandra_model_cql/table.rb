@@ -1,4 +1,16 @@
 module CassandraModelCql
+
+  # Class Table which implement Cassandra` ColumnFamily
+  #
+  # @example Selecting all rows with given primary
+  #   class Timeline < CassandraModelCql::Table
+  #   end
+  #
+  #   rows = Timeline.all('some_primary_key')
+  #   rows.each do |row|
+  #     row['body'] = 'Another body!'
+  #     row.save
+  #   end
   class Table
     @primary_key = nil
     @last_error, @last_error_command = nil, nil
