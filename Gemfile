@@ -9,6 +9,7 @@ group :development do
   gem "jeweler", "~> 1.8.4"
 end
 
+gem 'redcarpet'
 gem 'yard'
 
 gem 'active_support'
