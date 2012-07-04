@@ -16,7 +16,7 @@ module CassandraModelCql
     end
 
     # Execute CQL3 query within connection
-    # @param [Array, String] cql_strings string with cql3 commands
+    # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @return [CassandraModeCql::RowSet] row set
     def query(cql_string, multi_commands = true, table=nil)
