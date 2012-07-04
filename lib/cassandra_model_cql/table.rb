@@ -1,7 +1,10 @@
 module CassandraModelCql
   class Table
     @primary_key = nil
+    @last_error, @last_error_command = nil, nil
+
     class << self
+      attr_accessor :last_error, :last_error_command
 
       def connection(kyspc='history')
         CassandraModelCql::Connection.connection(kyspc)
@@ -23,6 +26,7 @@ module CassandraModelCql
         command = "SELECT * from #{table_name} #{where_clause}"
 
         rs = connection.query(command, true, self)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command if rs.last_error
         rs.rows || {}
       end
 

@@ -9,5 +9,7 @@ group :development do
   gem "jeweler", "~> 1.8.4"
 end
 
+gem 'yard'
+
 gem 'active_support'
 gem "cassandra-cql", :git=>"git://github.com/kreynolds/cassandra-cql.git"
