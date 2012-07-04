@@ -1,6 +1,6 @@
 # cassandra\_model\_cql
 
-Rought Wrapper for Cassandra CQL operations.
+Rough Wrapper for Cassandra CQL operations.
 
 ## Example of usage
 
