@@ -1,7 +1,4 @@
 source "http://rubygems.org"
-# Add dependencies required to use your gem here.
-# Example:
-#   gem "activesupport", ">= 2.3.5"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
@@ -16,4 +13,6 @@ group :test do
   gem "rspec"
 end
 
-gem 'cassandra-cql', :git=>"git://github.com/kreynolds/cassandra-cql.git"
+gem 'active_support'
+gem "cassandra-cql", :git=>"git://github.com/kreynolds/cassandra-cql.git"
+
