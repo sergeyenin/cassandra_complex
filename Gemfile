@@ -13,6 +13,9 @@ group :test do
   gem "rspec"
 end
 
+gem 'redcarpet'
+gem 'yard'
+
 gem 'active_support'
 gem "cassandra-cql", :git=>"git://github.com/kreynolds/cassandra-cql.git"
 
