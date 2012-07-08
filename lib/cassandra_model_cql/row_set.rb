@@ -34,10 +34,10 @@ module CassandraModelCql
     # rescue any Exception
     #
     # @param [String] cql_command CQL3 command that executed
-    def execute_query(cql_command)
+    def execute_query(cql_command, &blck)
       @cql_commands.push(cql_command)
       begin
-        add_rows(@conn.execute(cql_command))
+        add_rows(@conn.execute(cql_command), &blck)
         @last_error = nil
         @last_error_command = nil
       rescue Exception => ex
@@ -64,7 +64,7 @@ module CassandraModelCql
     # Add rows to current RowSet
     #
     # @param [CassandraCQL::Row] rows Rows that should be added to RowSet
-    def add_rows(rows, &block)
+    def add_rows(rows)
       return unless rows
 
       rows.fetch do |thrift_row|
@@ -74,7 +74,6 @@ module CassandraModelCql
           column_value = CassandraCQL::ColumnFamily.cast(thrift_column.value, thrift_row.schema.values[thrift_column.name])
           row.merge!({column_name=>column_value})
         end
-        block.call(row) if block
         @rows.push(row)
       end
     end

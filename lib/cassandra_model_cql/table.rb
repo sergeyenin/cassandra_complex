@@ -36,12 +36,24 @@ module CassandraModelCql
         @id
       end
 
-      def all(key=nil)
-        where_clause = ""
-        where_clause = "WHERE #{id} = #{key}" if key
+      def all(key=nil, clauses={})
+        
+        where_clause = ''
+        if key
+          where_clause = "WHERE #{id} = '#{key}'"
+          if !clauses.empty? && clauses[:where]
+            where_clause << ' and ' + clauses[:where]
+          end
+        elsif !clauses.empty? && clauses[:where]
+          where_clause = 'where ' + clauses[:where]
+        end
 
-        command = "SELECT * from #{table_name} #{where_clause}"
+        order_clause = ''
+        if !clauses.empty? && clauses[:order]
+          order_clause = ' order by ' + clauses[:order]
+        end
 
+        command = "SELECT * from #{table_name} #{where_clause} #{order_clause}"
         rs = connection.query(command, true, self)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command if rs.last_error
         rs.rows || {}
