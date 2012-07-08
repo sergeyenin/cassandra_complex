@@ -18,7 +18,7 @@ module CassandraModelCql
     class << self
       attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
- 
+
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
@@ -37,7 +37,7 @@ module CassandraModelCql
       end
 
       def all(key=nil, clauses={})
-        
+
         where_clause = ''
         if key
           where_clause = "WHERE #{id} = '#{key}'"
@@ -55,7 +55,7 @@ module CassandraModelCql
 
         command = "SELECT * from #{table_name} #{where_clause} #{order_clause}"
         rs = connection.query(command, true, self)
-        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command if rs.last_error
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || {}
       end
 
