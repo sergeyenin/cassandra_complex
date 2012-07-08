@@ -64,7 +64,7 @@ module CassandraModelCql
     # Add rows to current RowSet
     #
     # @param [CassandraCQL::Row] rows Rows that should be added to RowSet
-    def add_rows(rows)
+    def add_rows(rows, &blck)
       return unless rows
 
       rows.fetch do |thrift_row|
@@ -74,6 +74,7 @@ module CassandraModelCql
           column_value = CassandraCQL::ColumnFamily.cast(thrift_column.value, thrift_row.schema.values[thrift_column.name])
           row.merge!({column_name=>column_value})
         end
+        blck.call(row) if block_given?
         @rows.push(row)
       end
     end

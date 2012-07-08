@@ -36,7 +36,7 @@ module CassandraModelCql
         @id
       end
 
-      def all(key=nil, clauses={})
+      def all(key=nil, clauses={}, &blck)
 
         where_clause = ''
         if key
@@ -54,7 +54,7 @@ module CassandraModelCql
         end
 
         command = "SELECT * from #{table_name} #{where_clause} #{order_clause}"
-        rs = connection.query(command, true, self)
+        rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || {}
       end

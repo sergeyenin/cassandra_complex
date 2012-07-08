@@ -48,12 +48,12 @@ module CassandraModelCql
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @param [CassandraModelCql::Table] table the table with describing schema
     # @return [CassandraModeCql::RowSet] row set
-    def query(cql_string, multi_commands = true, table=nil)
+    def query(cql_string, multi_commands = true, table=nil, &blck)
       row_set = RowSet.new(@conn, table)
 
       begin
         prepare_cql_statement(cql_string, multi_commands).each do |cql|
-          row_set << row_set.execute_query(cql) unless cql.strip.empty?
+          row_set << row_set.execute_query(cql, &blck) unless cql.strip.empty?
         end
       ensure
         return row_set
