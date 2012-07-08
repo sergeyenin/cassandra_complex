@@ -12,6 +12,7 @@ module CassandraModelCql
   class Connection
 
     attr_reader :keyspace
+    attr_reader :conn
 
     # Connections pool, @see .connection
     @@connections = {}
