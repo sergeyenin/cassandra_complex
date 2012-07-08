@@ -15,6 +15,9 @@ module CassandraModelCql
     @id, @keyspace = nil, 'system'
     @last_error, @last_error_command = nil, nil
 
+    #not neccessary to allow .new
+    private_class_method :new
+
     class << self
       attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
@@ -40,7 +43,7 @@ module CassandraModelCql
 
         where_clause = ''
         if key
-          where_clause = "WHERE #{id} = '#{key}'"
+          where_clause = "where #{id} = '#{key}'"
           if !clauses.empty? && clauses[:where]
             where_clause << ' and ' + clauses[:where]
           end
@@ -53,10 +56,32 @@ module CassandraModelCql
           order_clause = ' order by ' + clauses[:order]
         end
 
-        command = "SELECT * from #{table_name} #{where_clause} #{order_clause}"
+        command = "select * from #{table_name} #{where_clause} #{order_clause}"
         rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || {}
+      end
+
+      def find(key=nil, clause={}, &blck)
+        self.all(key, clause, blck)
+      end
+
+      def create(options)
+        return false if options.empty?
+
+        keys   = options.keys.join(', ')
+        values = options.values.join(', ')
+
+        command = "insert into #{table_name} (#{keys}) values (#{values})"
+
+        rs = connection.query(command, true, self)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
+
+        return (self.last_error  == nil)
+      end
+
+      def update(options)
+        self.create(options)
       end
 
     end
