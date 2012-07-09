@@ -34,10 +34,10 @@ module CassandraModelCql
     # rescue any Exception
     #
     # @param [String] cql_command CQL3 command that executed
-    def execute_query(cql_command)
+    def execute_query(cql_command, &blck)
       @cql_commands.push(cql_command)
       begin
-        add_rows(@conn.execute(cql_command))
+        add_rows(@conn.execute(cql_command), &blck)
         @last_error = nil
         @last_error_command = nil
       rescue Exception => ex
@@ -63,12 +63,19 @@ module CassandraModelCql
 
     # Add rows to current RowSet
     #
-    # @param [CassandraCQL::Row] rws Rows that should be added to RowSet
-    def add_rows(rws)
-      return unless rws
+    # @param [CassandraCQL::Row] rows Rows that should be added to RowSet
+    def add_rows(rows, &blck)
+      return unless rows
 
-      rws.fetch do |row|
-        @rows.push(Row.new({:thrift_row=>row, :table=>@table}))
+      rows.fetch do |thrift_row|
+        row = {}
+        thrift_row.row.columns.each do |thrift_column|
+          column_name  = CassandraCQL::ColumnFamily.cast(thrift_column.name, thrift_row.schema.names[thrift_column.name])
+          column_value = CassandraCQL::ColumnFamily.cast(thrift_column.value, thrift_row.schema.values[thrift_column.name])
+          row.merge!({column_name=>column_value})
+        end
+        blck.call(row) if block_given?
+        @rows.push(row)
       end
     end
 
