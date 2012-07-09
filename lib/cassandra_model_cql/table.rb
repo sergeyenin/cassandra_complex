@@ -21,13 +21,22 @@ module CassandraModelCql
     class << self
       attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
+      @@current_keyspace = nil
 
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
 
       def connection(kyspc=nil)
-        CassandraModelCql::Connection.connection(kyspc || self.keyspace)
+        CassandraModelCql::Connection.connection(kyspc || @@current_keyspace || self.keyspace)
+      end
+
+      #not thread safe!
+      def with_keyspace(kyspc, &blck)
+        @@current_keyspace = kyspc
+        blck.call
+        ensure
+          @@current_keyspace = nil
       end
 
       def table_name
