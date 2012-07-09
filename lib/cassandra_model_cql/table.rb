@@ -47,29 +47,21 @@ module CassandraModelCql
 
       def all(key=nil, clauses={}, &blck)
 
-        where_clause = ''
-        if key
-          where_clause = "where #{id} = '#{key}'"
-          if !clauses.empty? && clauses[:where]
-            where_clause << ' and ' + clauses[:where]
-          end
-        elsif !clauses.empty? && clauses[:where]
-          where_clause = 'where ' + clauses[:where]
-        end
-
-        order_clause = ''
-        if !clauses.empty? && clauses[:order]
-          order_clause = ' order by ' + clauses[:order]
-        end
-
-        command = "select * from #{table_name} #{where_clause} #{order_clause}"
+        command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
         rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || {}
       end
 
-      def find(key=nil, clause={}, &blck)
-        self.all(key, clause, blck)
+      def find(key=nil, clauses={}, &blck)
+        self.all(key, clause, &blck)
+      end
+
+      def count(key=nil, clauses={}, &blck)
+        command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
+        rs = connection.query(command, true, self, &blck)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
+        rs.rows || {}
       end
 
       def create(options)
@@ -110,6 +102,27 @@ module CassandraModelCql
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
 
         return (self.last_error  == nil)
+      end
+
+    private
+
+      def build_select_clause(key=nil, clauses={})
+        where_clause = ''
+        if key
+          where_clause = "where #{id} = '#{key}'"
+          if !clauses.empty? && clauses[:where]
+            where_clause << ' and ' + clauses[:where]
+          end
+        elsif !clauses.empty? && clauses[:where]
+          where_clause = 'where ' + clauses[:where]
+        end
+
+        order_clause = ''
+        if !clauses.empty? && clauses[:order]
+          order_clause = ' order by ' + clauses[:order]
+        end
+        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause}"
+        command
       end
 
     end
