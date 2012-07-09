@@ -55,11 +55,10 @@ module CassandraModelCql
       end
 
       def all(key=nil, clauses={}, &blck)
-
         command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
         rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
-        rs.rows || {}
+        rs.rows || []
       end
 
       def find(key=nil, clauses={}, &blck)
@@ -70,16 +69,19 @@ module CassandraModelCql
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
-        rs.rows || {}
+        rs.rows || []
       end
 
-      def create(options)
-        return false if options.empty?
+      def create(clauses={}, options={})
+        return false if clauses.empty?
 
-        keys   = options.keys.join(', ')
-        values = options.values.join(', ')
+        keys   = clauses.keys.join(', ')
+        values = clauses.values.join(', ')
 
-        command = "insert into #{table_name} (#{keys}) values (#{values})"
+        timestamp_clause = ''
+        timestamp_clause = "using timestamp #{options[:timestamp]}" if options[:timestamp]
+
+        command = "insert into #{table_name} (#{keys}) values (#{values}) #{timestamp_clause}"
 
         rs = connection.query(command, true, self)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
@@ -133,8 +135,6 @@ module CassandraModelCql
         command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause}"
         command
       end
-
     end
-
   end
 end

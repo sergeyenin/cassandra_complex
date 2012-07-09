@@ -15,6 +15,7 @@ module CassandraModelCql
 
     attr_reader :keyspace
     attr_reader :conn
+
     # Connections pool, @see .connection
     @@connections = {}
 
@@ -44,7 +45,7 @@ module CassandraModelCql
       @mutex = Mutex.new
     end
 
-    # Execute CQL3 query
+    # Execute CQL3 query with Thread safety.
     #
     # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands

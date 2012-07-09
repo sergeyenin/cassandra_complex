@@ -63,6 +63,7 @@ module CassandraModelCql
 
     # Add rows to current RowSet
     #
+    # @yield Call block on each row fetch
     # @param [CassandraCQL::Row] rows Rows that should be added to RowSet
     def add_rows(rows, &blck)
       return unless rows
