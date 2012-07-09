@@ -40,9 +40,9 @@ module CassandraModelCql
       end
 
       def query(cql_query_string, &blck)
-        rs = connection.query(command, true, self, &blck)
+        rs = connection.query(cql_query_string, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
-        rs.rows || {}
+        rs
       end
 
       def all(key=nil, clauses={}, &blck)
