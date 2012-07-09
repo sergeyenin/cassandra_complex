@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-07-07"
+  s.date = "2012-07-09"
   s.description = "TODO: longer description of your gem"
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
@@ -26,7 +26,6 @@ Gem::Specification.new do |s|
     "VERSION",
     "cassandra_model_cql.gemspec",
     "lib/cassandra_model_cql.rb",
-    "lib/cassandra_model_cql/column.rb",
     "lib/cassandra_model_cql/connection.rb",
     "lib/cassandra_model_cql/row.rb",
     "lib/cassandra_model_cql/row_set.rb",
@@ -37,7 +36,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/sergeyenin/cassandra_model_cql"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.15"
+  s.rubygems_version = "1.8.10"
   s.summary = "TODO: one-line summary of your gem"
 
   if s.respond_to? :specification_version then
