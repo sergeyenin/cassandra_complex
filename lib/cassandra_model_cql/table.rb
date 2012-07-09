@@ -39,6 +39,12 @@ module CassandraModelCql
         @id
       end
 
+      def query(cql_query_string, &blck)
+        rs = connection.query(command, true, self, &blck)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
+        rs.rows || {}
+      end
+
       def all(key=nil, clauses={}, &blck)
 
         where_clause = ''
@@ -82,6 +88,28 @@ module CassandraModelCql
 
       def update(options)
         self.create(options)
+      end
+
+      def delete(key=nil,options={})
+        return false unless key
+
+        where_clause = ''
+        if key.kind_of?(Array)
+          where_clause = " where #{id} in (#{key.join(', ')})"
+        elsif key.kind_of?(String)
+          where_clause = " where #{id} = #{key}"
+        else
+          return false
+        end
+
+        columns_clause = ''
+        columns_clause = options[:columns].join(', ') if options[:columns]
+
+        command = "delete #{columns_clause} from #{table_name} #{where_clause}"
+        rs = connection.query(command, true, self)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
+
+        return (self.last_error  == nil)
       end
 
     end
