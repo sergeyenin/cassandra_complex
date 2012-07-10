@@ -70,17 +70,19 @@ module CassandraModelCql
     # @param [String] kyspc The keyspace of chaning context
     # @yield Execute cassandra operations within context of kyspc
     def with_keyspace(kyspc)
-      if kyspc != @keyspace.strip
-        old_keyspace, @keyspace = @keyspace, kyspc
+      @mutex.synchronize {
+        if kyspc != @keyspace.strip
+          old_keyspace, @keyspace = @keyspace, kyspc
 
-        query("use #{@keyspace};")
-        yield if block_given?
-        query("use #{old_keyspace};")
+          query("use #{@keyspace};")
+          yield if block_given?
+          query("use #{old_keyspace};")
 
-        @keyspace = old_keyspace
-      else
-        yield if block_given?
-      end
+          @keyspace = old_keyspace
+        else
+          yield if block_given?
+        end
+      }
     end
 
     # Execute CQL3 commands within batch, @see query

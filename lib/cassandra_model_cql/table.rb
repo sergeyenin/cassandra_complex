@@ -1,6 +1,5 @@
 module CassandraModelCql
-
-  # Class Table which implement Cassandra` ColumnFamily
+  # Class Table which wraps CQL3 operations
   #
   # @example Selecting all rows with given primary
   #   class Timeline < CassandraModelCql::Table
@@ -8,8 +7,7 @@ module CassandraModelCql
   #
   #   rows = Timeline.all('some_primary_key')
   #   rows.each do |row|
-  #     row['body'] = 'Another body!'
-  #     row.save
+  #     puts row['body']
   #   end
   class Table
     @id, @keyspace = nil, 'system'
@@ -21,22 +19,17 @@ module CassandraModelCql
     class << self
       attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
-      @@current_keyspace = nil
 
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
 
       def connection(kyspc=nil)
-        CassandraModelCql::Connection.connection(kyspc || @@current_keyspace || self.keyspace)
+        CassandraModelCql::Connection.connection(kyspc || self.keyspace)
       end
 
-      #not thread safe!
       def with_keyspace(kyspc, &blck)
-        @@current_keyspace = kyspc
-        blck.call
-        ensure
-          @@current_keyspace = nil
+        connection.with_keyspace(kyspc, &blck)
       end
 
       def table_name
@@ -48,6 +41,7 @@ module CassandraModelCql
         @id
       end
 
+      #raw query
       def query(cql_query_string, &blck)
         rs = connection.query(cql_query_string, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
@@ -61,9 +55,7 @@ module CassandraModelCql
         rs.rows || []
       end
 
-      def find(key=nil, clauses={}, &blck)
-        self.all(key, clause, &blck)
-      end
+      alias find all
 
       def count(key=nil, clauses={}, &blck)
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
@@ -89,9 +81,7 @@ module CassandraModelCql
         return (self.last_error  == nil)
       end
 
-      def update(options)
-        self.create(options)
-      end
+      alias update create
 
       def delete(key=nil,options={})
         return false unless key
