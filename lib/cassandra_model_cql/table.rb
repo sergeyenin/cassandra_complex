@@ -5,8 +5,12 @@ module CassandraModelCql
   #   class Timeline < CassandraModelCql::Table
   #   end
   #
-  #   rows = Timeline.all('some_primary_key')
+  #   rows = Timeline.all('some_primary_key') do |row|
+  #     # this puts is outputed on each row is being fetch
+  #     puts row['body']
+  #   end
   #   rows.each do |row|
+  #     # puts is being outputed when all rows are fetched from Cassandra
   #     puts row['body']
   #   end
   class Table
