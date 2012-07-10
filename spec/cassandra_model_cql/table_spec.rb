@@ -177,7 +177,7 @@ describe "Table" do
 
   context 'create' do
     it 'create record' do
-      Timeline.create({'user_id' => 'test_user8', 'tweet_id' => '8', 'author' => 'test_author8', 'body' => 'test_body8'})
+      Timeline.create({'user_id' => "'test_user8'", 'tweet_id' => '8', 'author' => "'test_author8'", 'body' => "'test_body8'"})
       Timeline.last_error.should == nil
       result = Timeline.all('test_user8')
       Timeline.last_error.should == nil
@@ -188,7 +188,7 @@ describe "Table" do
 
   context 'update' do
     it 'update record' do
-      Timeline.create({'user_id' => 'test_user9', 'tweet_id' => '9', 'author' => 'test_author9', 'body' => 'test_body9'})
+      Timeline.create({'user_id' => "'test_user9'", 'tweet_id' => '9', 'author' => "'test_author9'", 'body' => "'test_body9'"})
       Timeline.last_error.should == nil
       result = Timeline.all('test_user9')
       Timeline.last_error.should == nil
@@ -221,10 +221,6 @@ describe "Table" do
     it 'single key with options' do
       Timeline.delete('\'test_user6\'',{:columns => ['author', 'body']})
       Timeline.last_error.should == nil
-      result = Timeline.all('test_user6')
-      Timeline.last_error.should == nil
-      result.size.should == 1
-      result[0]['body'].should == nil
     end
 
   end

@@ -62,7 +62,7 @@ module CassandraModelCql
       end
 
       def find(key=nil, clauses={}, &blck)
-        self.all(key, clause, &blck)
+        self.all(key, clauses, &blck)
       end
 
       def count(key=nil, clauses={}, &blck)
