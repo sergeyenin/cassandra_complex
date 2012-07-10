@@ -1,20 +1,20 @@
 require 'thread'
 
 module CassandraModelCql
-  # Basic class which encapsulate driver` connection
+  # Basic class which encapsulate driver` connection to a Cassandra cluster.
+  # It executes raw CQL and can return result sets in two ways.
   #
   # @!attribute [r] keyspace
   #   @return [String] The keyspace is being connected to
   # @example Usage of Connection
   #   connection = Connection.new('127.0.0.1:9160')
-  #   row_set    = connection.query("select * timeline")
+  #   row_set    = connection.execute("select * timeline")
   #   row_set.each |row|
-  #     puts row[:user_id]
+  #     puts row['user_id']
   #   end
   class Connection
 
     attr_reader :keyspace
-    attr_reader :conn
 
     # Connections pool, @see .connection
     @@connections = {}
@@ -35,9 +35,9 @@ module CassandraModelCql
 
     # Create new instance of Connection and initialize connection with Cassandra
     #
-    # @param [Array, String] hosts list of hosts or just obvious host String
+    # @param [Array, String] hosts list of hosts, a single host, to connect to
     # @param [Hash] options list of options
-    # @option options [String] :keyspace The keyspace to connect
+    # @option options [String] keyspace initial keyspace to connect; defaults to 'system'
     # @return [CassandraModelCql::Connection] new instance
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
@@ -51,7 +51,7 @@ module CassandraModelCql
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @param [CassandraModelCql::Table] table the table with describing schema
     # @return [CassandraModeCql::RowSet] row set
-    def query(cql_string, multi_commands = true, table=nil, &blck)
+    def execute(cql_string, multi_commands = true, table=nil, &blck)
       row_set = RowSet.new(@conn, table)
 
       @mutex.synchronize {
@@ -65,7 +65,7 @@ module CassandraModelCql
       }
     end
 
-    # Change context of connection temporary
+    # Change current keyspace temporarily; restore original keyspace upon return.
     #
     # @param [String] kyspc The keyspace of chaning context
     # @yield Execute cassandra operations within context of kyspc
@@ -74,9 +74,9 @@ module CassandraModelCql
         if kyspc != @keyspace.strip
           old_keyspace, @keyspace = @keyspace, kyspc
 
-          query("use #{@keyspace};")
+          execute("use #{@keyspace};")
           yield if block_given?
-          query("use #{old_keyspace};")
+          execute("use #{old_keyspace};")
 
           @keyspace = old_keyspace
         else
@@ -85,7 +85,7 @@ module CassandraModelCql
       }
     end
 
-    # Execute CQL3 commands within batch, @see query
+    # Execute CQL3 commands within batch, @see execute
     #
     # @param [String, Array] cql_commands CQL3 commands to be executed within batch
     # @param [Hash] options Consistency options of batch command
@@ -94,13 +94,21 @@ module CassandraModelCql
     # @option options[String] :read_consistency ('QUORUM') Read consistency
     # @option options[Time]   :read_timestamp   (nil)   Read timestamp
     # @return [CassandraModeCql::RowSet] row set
-    def batch_query(cql_commands, options={:write_consistency=>'ANY', :write_timestamp=>nil, :read_consistency=>'QUORUM', :read_timestamp=>nil})
+    def execute_batch(cql_commands, options={:write_consistency=>'ANY', :write_timestamp=>nil, :read_consistency=>'QUORUM', :read_timestamp=>nil})
       command = "\
         BEGIN BATCH #{prepare_consistency_level(options)}
           #{cql_commands}
         APPLY BATCH;\
       "
-      query(command, false)
+      execute(command, false)
+    end
+
+    # Return key alias(primary key) for given table
+    #
+    # @param [String] table_name Table name of given table
+    # @return [String] primary key for given table
+    def key_alias(table_name)
+      @conn.schema.column_families[table_name].cf_def.key_alias
     end
 
     private

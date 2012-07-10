@@ -10,6 +10,8 @@ module CassandraModelCql
   #     puts row['body']
   #   end
   class Table
+    class ConfigurationError < Exception; end
+
     @id, @keyspace = nil, 'system'
     @last_error, @last_error_command = nil, nil
 
@@ -37,20 +39,20 @@ module CassandraModelCql
       end
 
       def id
-        @id ||= connection.conn.schema.column_families[table_name].cf_def.key_alias
+        @id ||= connection.key_alias(table_name)
         @id
       end
 
-      #raw query
-      def query(cql_query_string, &blck)
-        rs = connection.query(cql_query_string, true, self, &blck)
+      #raw query execution
+      def execute(cql_query_string, &blck)
+        rs = connection.execute(cql_query_string, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs
       end
 
       def all(key=nil, clauses={}, &blck)
         command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
-        rs = connection.query(command, true, self, &blck)
+        rs = connection.execute(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || []
       end
@@ -59,7 +61,7 @@ module CassandraModelCql
 
       def count(key=nil, clauses={}, &blck)
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
-        rs = connection.query(command, true, self, &blck)
+        rs = connection.execute(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
         rs.rows || []
       end
@@ -75,7 +77,7 @@ module CassandraModelCql
 
         command = "insert into #{table_name} (#{keys}) values (#{values}) #{timestamp_clause}"
 
-        rs = connection.query(command, true, self)
+        rs = connection.execute(command, true, self)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
 
         return (self.last_error  == nil)
@@ -99,7 +101,7 @@ module CassandraModelCql
         columns_clause = options[:columns].join(', ') if options[:columns]
 
         command = "delete #{columns_clause} from #{table_name} #{where_clause}"
-        rs = connection.query(command, true, self)
+        rs = connection.execute(command, true, self)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
 
         return (self.last_error  == nil)

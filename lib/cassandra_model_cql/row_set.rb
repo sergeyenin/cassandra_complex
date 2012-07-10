@@ -31,7 +31,7 @@ module CassandraModelCql
     end
 
     # Execute query and fill RowSet with rows,
-    # rescue any Exception
+    # storing any raised Exception.
     #
     # @param [String] cql_command CQL3 command that executed
     def execute_query(cql_command, &blck)
@@ -43,6 +43,7 @@ module CassandraModelCql
       rescue Exception => ex
         @last_error = ex
         @last_error_command = cql_command
+        raise ex
       end
     end
 

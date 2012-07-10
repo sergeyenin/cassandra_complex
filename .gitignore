@@ -50,3 +50,6 @@ tmp
 .yardoc
 _yardoc
 doc/
+
+# IntelliJ / RubyMine
+.idea
