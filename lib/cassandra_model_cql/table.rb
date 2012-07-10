@@ -21,13 +21,22 @@ module CassandraModelCql
     class << self
       attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
+      @@current_keyspace = nil
 
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
 
       def connection(kyspc=nil)
-        CassandraModelCql::Connection.connection(kyspc || self.keyspace)
+        CassandraModelCql::Connection.connection(kyspc || @@current_keyspace || self.keyspace)
+      end
+
+      #not thread safe!
+      def with_keyspace(kyspc, &blck)
+        @@current_keyspace = kyspc
+        blck.call
+        ensure
+          @@current_keyspace = nil
       end
 
       def table_name
@@ -40,45 +49,39 @@ module CassandraModelCql
       end
 
       def query(cql_query_string, &blck)
-        rs = connection.query(command, true, self, &blck)
+        rs = connection.query(cql_query_string, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
-        rs.rows || {}
+        rs
       end
 
       def all(key=nil, clauses={}, &blck)
-
-        where_clause = ''
-        if key
-          where_clause = "where #{id} = '#{key}'"
-          if !clauses.empty? && clauses[:where]
-            where_clause << ' and ' + clauses[:where]
-          end
-        elsif !clauses.empty? && clauses[:where]
-          where_clause = 'where ' + clauses[:where]
-        end
-
-        order_clause = ''
-        if !clauses.empty? && clauses[:order]
-          order_clause = ' order by ' + clauses[:order]
-        end
-
-        command = "select * from #{table_name} #{where_clause} #{order_clause}"
+        command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
         rs = connection.query(command, true, self, &blck)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
-        rs.rows || {}
+        rs.rows || []
       end
 
-      def find(key=nil, clause={}, &blck)
-        self.all(key, clause, blck)
+      def find(key=nil, clauses={}, &blck)
+        self.all(key, clause, &blck)
       end
 
-      def create(options)
-        return false if options.empty?
+      def count(key=nil, clauses={}, &blck)
+        command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
+        rs = connection.query(command, true, self, &blck)
+        self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
+        rs.rows || []
+      end
 
-        keys   = options.keys.join(', ')
-        values = options.values.join(', ')
+      def create(clauses={}, options={})
+        return false if clauses.empty?
 
-        command = "insert into #{table_name} (#{keys}) values (#{values})"
+        keys   = clauses.keys.join(', ')
+        values = clauses.values.join(', ')
+
+        timestamp_clause = ''
+        timestamp_clause = "using timestamp #{options[:timestamp]}" if options[:timestamp]
+
+        command = "insert into #{table_name} (#{keys}) values (#{values}) #{timestamp_clause}"
 
         rs = connection.query(command, true, self)
         self.last_error, self.last_error_command = rs.last_error, rs.last_error_command
@@ -112,7 +115,26 @@ module CassandraModelCql
         return (self.last_error  == nil)
       end
 
-    end
+    private
 
+      def build_select_clause(key=nil, clauses={})
+        where_clause = ''
+        if key
+          where_clause = "where #{id} = '#{key}'"
+          if !clauses.empty? && clauses[:where]
+            where_clause << ' and ' + clauses[:where]
+          end
+        elsif !clauses.empty? && clauses[:where]
+          where_clause = 'where ' + clauses[:where]
+        end
+
+        order_clause = ''
+        if !clauses.empty? && clauses[:order]
+          order_clause = ' order by ' + clauses[:order]
+        end
+        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause}"
+        command
+      end
+    end
   end
 end

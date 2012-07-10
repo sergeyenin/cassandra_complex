@@ -1,3 +1,5 @@
+require 'thread'
+
 module CassandraModelCql
   # Basic class which encapsulate driver` connection
   #
@@ -40,9 +42,10 @@ module CassandraModelCql
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
       @conn = CassandraCQL::Database.new(hosts, options.merge({:cql_version=>'3.0.0'}))
+      @mutex = Mutex.new
     end
 
-    # Execute CQL3 query
+    # Execute CQL3 query with Thread safety.
     #
     # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
@@ -51,13 +54,15 @@ module CassandraModelCql
     def query(cql_string, multi_commands = true, table=nil, &blck)
       row_set = RowSet.new(@conn, table)
 
-      begin
-        prepare_cql_statement(cql_string, multi_commands).each do |cql|
-          row_set << row_set.execute_query(cql, &blck) unless cql.strip.empty?
+      @mutex.synchronize {
+        begin
+          prepare_cql_statement(cql_string, multi_commands).each do |cql|
+            row_set << row_set.execute_query(cql, &blck) unless cql.strip.empty?
+          end
+        ensure
+          return row_set
         end
-      ensure
-        return row_set
-      end
+      }
     end
 
     # Change context of connection temporary
