@@ -5,16 +5,16 @@ end
 
 describe "Table" do
 
-  before :all do
-    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('CREATE KEYSPACE test_spec WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
-    Timeline.set_keyspace('test_spec')
-  end
-
-  after :all do
-    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('DROP KEYSPACE test_spec;')
-  end
+  #before :all do
+    #conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    #conn.execute('CREATE KEYSPACE test_spec WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
+    #Timeline.set_keyspace('test_spec')
+  #end
+#
+  #after :all do
+    #conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    #conn.execute('DROP KEYSPACE test_spec;')
+  #end
 
   context 'connection' do
     it 'works' do
@@ -109,6 +109,12 @@ describe "Table" do
       result.size.should == 1
     end
 
+    it 'with array key' do
+      result = Timeline.all(['test_user1','test_user2'])
+      Timeline.last_error.should == nil
+      result.size.should == 2
+    end
+
     it 'without key and with where clauses' do
       result = Timeline.all(nil, { :where => 'user_id = \'test_user0\'' })
       Timeline.last_error.should == nil
@@ -121,6 +127,19 @@ describe "Table" do
       Timeline.last_error.should == nil
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
+    end
+
+    it 'without key and with limit clauses' do
+      result = Timeline.all(nil, { :limit => 3 })
+      Timeline.last_error.should == nil
+      result.size.should == 3
+    end
+
+    it 'select expression' do
+      result = Timeline.all(nil, { :select_expression => 'user_id, author' })
+      Timeline.last_error.should == nil
+      result[0]['user_id'].should != nil
+      result[0]['body'].should == nil
     end
 
     it 'with block processing' do
@@ -176,7 +195,75 @@ describe "Table" do
 
   end
 
+  context 'count' do
+
+    it 'without params' do
+      result = Timeline.count
+      Timeline.last_error == nil
+      result.size.should == 1
+      result[0]['count'].should == 5
+    end
+
+    it 'with key' do
+      result = Timeline.count('test_user0')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 1
+    end
+
+    it 'with not existing key' do
+      result = Timeline.count('test_')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 0
+    end
+
+    it 'with key and where clauses' do
+      result = Timeline.count('test_user1', { :where => 'tweet_id > 0' })
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 1
+    end
+
+    it 'with array key' do
+      result = Timeline.count(['test_user1','test_user2'])
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 2
+    end
+
+    it 'without key and with where clauses' do
+      result = Timeline.count(nil, { :where => 'user_id = \'test_user0\'' })
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 1
+    end
+
+    it 'without key and with order clauses' do
+      result = Timeline.count(nil, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 1
+    end
+
+    it 'without key and with limit clauses' do
+      result = Timeline.count(nil, { :limit => 3 })
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['count'].should == 3
+    end
+
+    it 'with block processing' do
+      id_sum = 0
+      Timeline.count { |element| id_sum += element['tweet_id'] }
+      Timeline.last_error.should == nil
+      id_sum.should == 1
+    end
+
+  end
+
   context 'create' do
+
     it 'create record' do
       Timeline.create({'user_id' => "'test_user8'", 'tweet_id' => '8', 'author' => "'test_author8'", 'body' => "'test_body8'"})
       Timeline.last_error.should == nil
@@ -185,6 +272,30 @@ describe "Table" do
       result.size.should == 1
       result[0]['user_id'].should == 'test_user8'
     end
+
+    it 'timestamp' do
+      Timeline.create({'user_id' => "'test_user10'", 'tweet_id' => '10', 'author' => "'test_author10'", 'body' => "'test_body10'"}, { :timestamp => 2 })
+      Timeline.last_error.should == nil
+      Timeline.create({'user_id' => "'test_user10'", 'tweet_id' => '10', 'author' => "'test_author11'", 'body' => "'test_body11'"}, { :timestamp => 1 })
+      Timeline.last_error.should == nil
+      result = Timeline.all('test_user10')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['author'].should == 'test_author10'
+    end
+
+    it 'ttl' do
+      Timeline.create({'user_id' => "'test_user11'", 'tweet_id' => '11', 'author' => "'test_author11'", 'body' => "'test_body11'"}, { :ttl => 1 })
+      Timeline.last_error.should == nil
+      result = Timeline.all('test_user11')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      sleep(2)
+      result = Timeline.all('test_user11')
+      Timeline.last_error.should == nil
+      result.size.should == 0
+    end
+
   end
 
   context 'update' do
@@ -208,7 +319,7 @@ describe "Table" do
       result.size.should == 0
     end
 
-    it 'multi key' do
+    it 'array key' do
       Timeline.delete(['\'test_user1\'','\'test_user2\''])
       Timeline.last_error.should == nil
       result = Timeline.all('test_user1')
