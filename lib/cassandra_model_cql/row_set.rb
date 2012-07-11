@@ -17,7 +17,6 @@ module CassandraModelCql
     include Enumerable
 
     attr_reader :rows, :cql_commands
-    attr_reader :last_error, :last_error_command
 
     # Create new instance of RowSet
     #
@@ -36,15 +35,7 @@ module CassandraModelCql
     # @param [String] cql_command CQL3 command that executed
     def execute_query(cql_command, &blck)
       @cql_commands.push(cql_command)
-      begin
-        add_rows(@conn.execute(cql_command), &blck)
-        @last_error = nil
-        @last_error_command = nil
-      rescue Exception => ex
-        @last_error = ex
-        @last_error_command = cql_command
-        raise ex
-      end
+      add_rows(@conn.execute(cql_command), &blck)
     end
 
     # Each as it require by Enumerable
