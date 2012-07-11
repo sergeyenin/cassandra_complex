@@ -110,7 +110,11 @@ module CassandraModelCql
       def build_select_clause(key=nil, clauses={})
         where_clause = ''
         if key
-          where_clause = "where #{id} = '#{key}'"
+          if key.kind_of?(String)
+            where_clause = "where #{id} = '#{key}'"
+          elsif key.kind_of?(Array)
+            where_clause = "where #{id} in (#{key.join(', ')})"
+          end
           if !clauses.empty? && clauses[:where]
             where_clause << ' and ' + clauses[:where]
           end
