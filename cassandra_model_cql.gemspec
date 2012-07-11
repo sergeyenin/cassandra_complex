@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-07-09"
+  s.date = "2012-07-11"
   s.description = "TODO: longer description of your gem"
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
@@ -27,6 +27,8 @@ Gem::Specification.new do |s|
     "cassandra_model_cql.gemspec",
     "lib/cassandra_model_cql.rb",
     "lib/cassandra_model_cql/connection.rb",
+    "lib/cassandra_model_cql/index.rb",
+    "lib/cassandra_model_cql/model.rb",
     "lib/cassandra_model_cql/row.rb",
     "lib/cassandra_model_cql/row_set.rb",
     "lib/cassandra_model_cql/table.rb",
@@ -51,6 +53,8 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, ["~> 1.1.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.4"])
+      s.add_development_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_development_dependency(%q<ruby-debug19>, [">= 0"])
     else
       s.add_dependency(%q<redcarpet>, [">= 0"])
       s.add_dependency(%q<yard>, [">= 0"])
@@ -60,6 +64,8 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, ["~> 1.1.0"])
       s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
+      s.add_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_dependency(%q<ruby-debug19>, [">= 0"])
     end
   else
     s.add_dependency(%q<redcarpet>, [">= 0"])
@@ -70,6 +76,8 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, ["~> 1.1.0"])
     s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
+    s.add_dependency(%q<ruby-debug>, [">= 0"])
+    s.add_dependency(%q<ruby-debug19>, [">= 0"])
   end
 end
 
