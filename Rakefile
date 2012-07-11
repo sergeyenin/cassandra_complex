@@ -21,8 +21,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "cassandra_model_cql"
   gem.homepage = "http://github.com/sergeyenin/cassandra_model_cql"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = "Raw wrapper for Cassandra CQL3 operations."
+  gem.description = "Raw wrapper for Cassandra CQL3 operations."
   gem.email = "sergeyenin@gmail.com"
   gem.authors = ["Sergey Enin"]
   # dependencies defined in Gemfile
