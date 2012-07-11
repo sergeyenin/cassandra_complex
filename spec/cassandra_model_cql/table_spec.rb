@@ -5,16 +5,16 @@ end
 
 describe "Table" do
 
-  #before :all do
-    #conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    #conn.execute('CREATE KEYSPACE test_spec WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
-    #Timeline.set_keyspace('test_spec')
-  #end
-#
-  #after :all do
-    #conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    #conn.execute('DROP KEYSPACE test_spec;')
-  #end
+  before :all do
+    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    conn.execute('CREATE KEYSPACE test_spec WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
+    Timeline.set_keyspace('test_spec')
+  end
+
+  after :all do
+    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    conn.execute('DROP KEYSPACE test_spec;')
+  end
 
   context 'connection' do
     it 'works' do
@@ -299,14 +299,39 @@ describe "Table" do
   end
 
   context 'update' do
+
     it 'update record' do
-      Timeline.create({'user_id' => "'test_user9'", 'tweet_id' => '9', 'author' => "'test_author9'", 'body' => "'test_body9'"})
+      Timeline.update({'user_id' => "'test_user9'", 'tweet_id' => '9', 'author' => "'test_author9'", 'body' => "'test_body9'"})
       Timeline.last_error.should == nil
       result = Timeline.all('test_user9')
       Timeline.last_error.should == nil
       result.size.should == 1
       result[0]['user_id'].should == 'test_user9'
     end
+
+    it 'timestamp' do
+      Timeline.update({'user_id' => "'test_user10'", 'tweet_id' => '10', 'author' => "'test_author10'", 'body' => "'test_body10'"}, { :timestamp => 2 })
+      Timeline.last_error.should == nil
+      Timeline.update({'user_id' => "'test_user10'", 'tweet_id' => '10', 'author' => "'test_author11'", 'body' => "'test_body11'"}, { :timestamp => 1 })
+      Timeline.last_error.should == nil
+      result = Timeline.all('test_user10')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      result[0]['author'].should == 'test_author10'
+    end
+
+    it 'ttl' do
+      Timeline.update({'user_id' => "'test_user11'", 'tweet_id' => '11', 'author' => "'test_author11'", 'body' => "'test_body11'"}, { :ttl => 1 })
+      Timeline.last_error.should == nil
+      result = Timeline.all('test_user11')
+      Timeline.last_error.should == nil
+      result.size.should == 1
+      sleep(2)
+      result = Timeline.all('test_user11')
+      Timeline.last_error.should == nil
+      result.size.should == 0
+    end
+
   end
 
   context 'delete' do
