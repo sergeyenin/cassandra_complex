@@ -14,15 +14,12 @@ module CassandraModelCql
   #     puts row['body']
   #   end
   class Table
-    class ConfigurationError < Exception; end
-
-    @id, @keyspace = nil, 'system'
-
     #not neccessary to allow .new
     private_class_method :new
 
     class << self
       attr_accessor :keyspace
+      attr_accessor :configuration
 
       def set_keyspace(kyspc)
         self.keyspace = kyspc

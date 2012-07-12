@@ -9,16 +9,14 @@ module CassandraModelCql
   # Your yaml configuration file should looks like:
   #
   # production:
-  #   hosts: '127.0.0.1, example.com'
-  #   port: 9160
-  #   keyspace: 'my_keyspace_production'
+  #   host: '127.0.0.1:9160', example.com:9160'
+  #   default_keyspace: 'my_keyspace_production'
   class Configuration
 
     class << self
-      attr_accessor :hosts, :port
-      attr_accessor :keyspace
+      attr_reader :host
+      attr_reader :default_keyspace
 
-      attr_accessr :logger
       # Load yaml source
       #
       # === Parameters
@@ -41,9 +39,11 @@ module CassandraModelCql
         rescue
           return_value = false
         end
-
+        @host = return_value['host']
+        @default_keyspace = return_value['default_keyspace']
         return_value
       end
+
     end
   end
 end

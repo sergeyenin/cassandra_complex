@@ -1,4 +1,5 @@
 require 'cassandra-cql/1.1'
+require 'cassandra_model_cql/configuration'
 require 'cassandra_model_cql/row'
 require 'cassandra_model_cql/connection'
 require 'cassandra_model_cql/table'

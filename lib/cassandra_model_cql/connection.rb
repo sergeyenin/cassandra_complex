@@ -20,18 +20,14 @@ module CassandraModelCql
     @@connections = {}
 
     class << self
-      attr_reader :configuration
-
-      def configuration=(something)
-        @configuration = Configuration.new
-      end
 
       # Create( if not exists or not active) and return connection to kyspc
       #
       # @param [String] kyspc ('system') The keyspace to which connect
       # @return [CassandraModelCql::Connection] Connection instance
-      def connection(kyspc='system')
-        @@connections[kyspc] = CassandraModelCql::Connection.new('127.0.0.1:9160', {:keyspace=>kyspc})\
+      def connection(kyspc=nil)
+	raise MissingConfiguration if Configuration.host.nil? || Configuration.keyspace.nil?
+        @@connections[kyspc] = CassandraModelCql::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
         @@connections[kyspc]
       end
