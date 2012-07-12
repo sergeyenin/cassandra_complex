@@ -22,7 +22,6 @@ module CassandraModelCql
     private_class_method :new
 
     class << self
-      attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
 
       def set_keyspace(kyspc)
@@ -55,7 +54,7 @@ module CassandraModelCql
       def all(key=nil, clauses={}, &blck)
         command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
         rs = connection.execute(command, true, self, &blck)
-        rs.rows || []
+        rs
       end
 
       alias find all
@@ -63,7 +62,7 @@ module CassandraModelCql
       def count(key=nil, clauses={}, &blck)
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         rs = connection.execute(command, true, self, &blck)
-        rs.rows || []
+        rs
       end
 
       def create(clauses={}, options={})
@@ -79,7 +78,7 @@ module CassandraModelCql
 
         rs = connection.execute(command, true, self)
 
-        return (self.last_error  == nil)
+        return true
       end
 
       alias update create
@@ -102,10 +101,10 @@ module CassandraModelCql
         command = "delete #{columns_clause} from #{table_name} #{where_clause}"
         rs = connection.execute(command, true, self)
 
-        return (self.last_error  == nil)
+        return true
       end
 
-    private
+    protected
 
       def build_select_clause(key=nil, clauses={})
         where_clause = ''
