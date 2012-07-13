@@ -26,7 +26,7 @@ module CassandraModelCql
       # @param [String] kyspc ('system') The keyspace to which connect
       # @return [CassandraModelCql::Connection] Connection instance
       def connection(kyspc=nil)
-	raise MissingConfiguration if Configuration.host.nil? || Configuration.keyspace.nil?
+	raise MissingConfiguration if Configuration.host.nil? || Configuration.default_keyspace.nil?
         @@connections[kyspc] = CassandraModelCql::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
         @@connections[kyspc]
@@ -54,7 +54,6 @@ module CassandraModelCql
     # @return [Array] row set
     def execute(cql_string, multi_commands = true, table=nil, &blck)
       row_set = []
-
       @mutex.synchronize {
         begin
           prepare_cql_statement(cql_string, multi_commands).each do |cql|
@@ -64,7 +63,7 @@ module CassandraModelCql
             end
           end
         ensure
-          return row_set
+          return row_set.flatten
         end
       }
     end
@@ -119,7 +118,7 @@ module CassandraModelCql
 
     def add_rows(rows, &blck)
       return unless rows
-
+      return_value = []
       rows.fetch do |thrift_row|
         row = {}
         thrift_row.row.columns.each do |thrift_column|
@@ -128,8 +127,9 @@ module CassandraModelCql
           row.merge!({column_name=>column_value})
         end
         blck.call(row) if block_given?
-        @rows.push(row)
+        return_value.push(row)
       end
+      return_value
     end
 
     # Prepare cql statement

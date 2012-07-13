@@ -122,7 +122,7 @@ module CassandraModelCql
         if !clauses.empty? && clauses[:order]
           order_clause = ' order by ' + clauses[:order]
         end
-        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause}"
+        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause};"
         command
       end
     end

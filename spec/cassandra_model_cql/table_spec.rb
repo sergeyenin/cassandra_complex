@@ -5,15 +5,25 @@ end
 
 describe "Table" do
 
-  before :all do
+  before :all, :focus=>true do
     conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('CREATE KEYSPACE test_spec WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
-    Timeline.set_keyspace('test_spec')
+    conn.execute('CREATE KEYSPACE spec_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
+    CassandraModelCql::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'spec_test'})
+    create_table_command = <<-eos
+        CREATE TABLE timeline (
+          user_id varchar,
+          tweet_id int,
+            author varchar,
+            body varchar,
+            PRIMARY KEY (user_id, tweet_id));
+    eos
+    Timeline.execute(create_table_command)
   end
 
-  after :all do
+  after :all, :focus=>true do
     conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('DROP KEYSPACE test_spec;')
+    conn.execute('DROP TABLE timeline;')
+    conn.execute('DROP KEYSPACE spec_test;')
   end
 
   context 'connection' do
@@ -29,19 +39,6 @@ describe "Table" do
   end
 
   context 'execute' do
-
-    it 'multiline query' do
-      request = <<-eof
-        CREATE TABLE timeline (
-          user_id varchar,
-          tweet_id int,
-            author varchar,
-            body varchar,
-            PRIMARY KEY (user_id, tweet_id));
-      eof
-      Timeline.execute(request)
-      Timeline.last_error.should == nil
-    end
 
     it 'single requests' do
       request = 'INSERT INTO timeline (user_id,tweet_id,author,body) values (\'test_user0\',0,\'test_author0\',\'test_body0\');'
@@ -334,30 +331,35 @@ describe "Table" do
 
   end
 
-  context 'delete' do
+  context 'delete', :focus=>true do
+    before (:each) do
+      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+    end
+
+    after (:each) do
+     Timeline.delete("'test_user0'")
+     Timeline.delete("'test_user1'")
+    end
 
     it 'single key' do
-      Timeline.delete('\'test_user0\'')
+      Timeline.delete("'test_user0'").should == true
+      Timeline.all('test_user0').size.should == 0
+    end
+
+    it 'array key' do
+      Timeline.delete(['\'test_user0\'','\'test_user1\''])
       Timeline.last_error.should == nil
       result = Timeline.all('test_user0')
       Timeline.last_error.should == nil
       result.size.should == 0
-    end
-
-    it 'array key' do
-      Timeline.delete(['\'test_user1\'','\'test_user2\''])
-      Timeline.last_error.should == nil
       result = Timeline.all('test_user1')
-      Timeline.last_error.should == nil
-      result.size.should == 0
-      result = Timeline.all('test_user2')
       Timeline.last_error.should == nil
       result.size.should == 0
     end
 
     it 'single key with options' do
-      Timeline.delete('\'test_user6\'',{:columns => ['author', 'body']})
-      Timeline.last_error.should == nil
+      Timeline.delete('\'test_user0\'',{:columns => ['author', 'body']}).should == true
     end
 
   end
