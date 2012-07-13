@@ -19,7 +19,7 @@ module CassandraModelCql
   # t = Timeline.new(:user_id=>'mickey', :tweet_id=>1715, :author=> 'mouse', :body=>"'Hello!'")
   # t.save
   #
-  # timelines = Timeline.find('mickey')
+  # timelines = Timeline.all('mickey')
   # t = timelines.first
   # puts t.body
   # => 'Hello!'
