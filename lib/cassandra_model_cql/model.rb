@@ -33,5 +33,68 @@ module CassandraModelCql
   # #dropping Column Family
   # Timeline.drop_table
   class Model < Table
+
+    class << self
+
+      @attributes = {}
+
+      @options = {}
+
+      @dirty = false
+
+      def attribute(name, type)
+        define_method(name) do
+          @attributes[name]
+        end
+        define_method(:"#{name}=") do |value|
+          @attributes[name] = value
+        end
+        self.last_error = nil
+      end
+
+      def primary_key
+      end
+
+      def create_table
+        self.last_error = nil
+      end
+
+      def drop_table
+        self.last_error = nil
+      end
+
+      def update(*columns)
+      # columns - arrays of pairs: key => value
+        self.last_error = nil
+      end
+
+      def dirty?
+        self.last_error = nil
+        @dirty
+      end
+
+      def save
+        self.last_error = nil
+      end
+
+      def delete(clauses = {})
+        self.last_error = nil
+      end
+
+      def find(*args, &blk)
+      # args[0] : primary key
+      # args[1...]: clauses
+        self.last_error = nil
+      end
+
+      def all(*args, &blk)
+      # args[0] : primary key
+      # args[1...]: clauses
+        self.last_error = nil
+      end
+
+    end
+
   end
+
 end
