@@ -1,14 +1,6 @@
 require 'spec_helper'
 
 class TestTable < CassandraModelCql::Model
-
-  set_keyspace 'test_spec1'
-
-  attribute :user_id, 'varchar'
-  attribute :tweet_id, 'int'
-  attribute :author, 'varchar'
-  attribute :body, 'varchar'
-  primary_key :user_id
 end
 
 describe "Model" do
@@ -18,9 +10,34 @@ describe "Model" do
     conn.execute('CREATE KEYSPACE test_spec1 WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
   end
 
-  after :all do
-    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('DROP KEYSPACE test_spec1;')
+  #after :all do
+    #conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    #conn.execute('DROP KEYSPACE test_spec1;')
+  #end
+
+  context 'create model' do
+
+    before :all do
+      @t = TestTable.new
+    end
+
+    it 'attribute' do
+      @t.attribute(:user_id, 'varchar')
+      @t.last_error.should == nil
+      @t.user_id = 'test'
+      @t.user_id.should == 'test'
+    end
+
+    it 'primary key' do
+      @t.primary_key(:user_id)
+      @t.last_error.should == nil
+    end
+
+    it 'keyspace' do
+      @t.set_keyspace('test_spec1')
+      @t.keyspace.should == 'test_spec1'
+    end
+
   end
 
   context 'create table' do
