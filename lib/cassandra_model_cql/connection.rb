@@ -25,8 +25,9 @@ module CassandraModelCql
       #
       # @param [String] kyspc ('system') The keyspace to which connect
       # @return [CassandraModelCql::Connection] Connection instance
-      def connection(kyspc='system')
-        @@connections[kyspc] = CassandraModelCql::Connection.new('127.0.0.1:9160', {:keyspace=>kyspc})\
+      def connection(kyspc=nil)
+	raise MissingConfiguration if Configuration.host.nil? || Configuration.default_keyspace.nil?
+        @@connections[kyspc] = CassandraModelCql::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
         @@connections[kyspc]
       end
@@ -50,17 +51,19 @@ module CassandraModelCql
     # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @param [CassandraModelCql::Table] table the table with describing schema
-    # @return [CassandraModeCql::RowSet] row set
+    # @return [Array] row set
     def execute(cql_string, multi_commands = true, table=nil, &blck)
-      row_set = RowSet.new(@conn, table)
-
+      row_set = []
       @mutex.synchronize {
         begin
           prepare_cql_statement(cql_string, multi_commands).each do |cql|
-            row_set << row_set.execute_query(cql, &blck) unless cql.strip.empty?
+            if !(cql.strip.empty?)
+              new_rows = add_rows(@conn.execute(cql), &blck)
+              row_set << new_rows if new_rows
+            end
           end
         ensure
-          return row_set
+          return row_set.flatten
         end
       }
     end
@@ -113,12 +116,20 @@ module CassandraModelCql
 
     private
 
-    # Prepare consistency level clause
-    # @param [Hash] options Consistency level options
-    # @return[String] consistency level clause
-    def prepare_consistency_level(options)
-      return_value = 'USING CONSISTENCY QUORUM'
-      return return_value
+    def add_rows(rows, &blck)
+      return unless rows
+      return_value = []
+      rows.fetch do |thrift_row|
+        row = {}
+        thrift_row.row.columns.each do |thrift_column|
+          column_name  = CassandraCQL::ColumnFamily.cast(thrift_column.name, thrift_row.schema.names[thrift_column.name])
+          column_value = CassandraCQL::ColumnFamily.cast(thrift_column.value, thrift_row.schema.values[thrift_column.name])
+          row.merge!({column_name=>column_value})
+        end
+        blck.call(row) if block_given?
+        return_value.push(row)
+      end
+      return_value
     end
 
     # Prepare cql statement
