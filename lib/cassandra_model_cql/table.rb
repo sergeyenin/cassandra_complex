@@ -68,9 +68,13 @@ module CassandraModelCql
       alias find all
 
       def count(key=nil, clauses={}, &blck)
+        return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         rs = connection.execute(command, true, self, &blck)
-        rs
+        if !rs.empty? && rs[0].has_key?('count')
+          return_value = rs[0]['count']
+        end
+        return_value
       end
 
       def create(clauses={}, options={})

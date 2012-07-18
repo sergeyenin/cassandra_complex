@@ -7,8 +7,8 @@ describe "Table" do
 
   before :all do
     conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('CREATE KEYSPACE spec_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
-    CassandraModelCql::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'spec_test'})
+    conn.execute('CREATE KEYSPACE cassandra_model_cql_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
+    CassandraModelCql::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_model_cql_test'})
     create_table_command = <<-eos
         CREATE TABLE timeline (
           user_id varchar,
@@ -23,7 +23,7 @@ describe "Table" do
   after :all do
     conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
     conn.execute('DROP TABLE timeline;')
-    conn.execute('DROP KEYSPACE spec_test;')
+    conn.execute('DROP KEYSPACE cassandra_model_cql_test;')
   end
 
   context 'execute' do
@@ -155,53 +155,45 @@ describe "Table" do
     end
 
     it 'without params' do
-      result = Timeline.count
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count
+      count.should == 1
     end
 
     it 'with key' do
-      result = Timeline.count("'test_user0'")
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count("'test_user0'")
+      count.should == 1
     end
 
     it 'with not existing key' do
-      result = Timeline.count("'test_'")
-      result.size.should == 1
-      result[0]['count'].should == 0
+      count = Timeline.count("'test_'")
+      count.should == 0
     end
 
     it 'with key and where clauses' do
-      result = Timeline.count("'test_user0'", { :where => 'tweet_id >= 10' })
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count("'test_user0'", { :where => 'tweet_id >= 10' })
+      count.should == 1
     end
 
     it 'with array key' do
       Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
-      result = Timeline.count(["'test_user0'","'test_user1'"])
-      result.size.should == 1
-      result[0]['count'].should == 2
+      count = Timeline.count(["'test_user0'","'test_user1'"])
+      count.should == 2
     end
 
     it 'without key and with where clauses' do
-      result = Timeline.count(nil, { :where => 'user_id = \'test_user0\'' })
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count(nil, { :where => 'user_id = \'test_user0\'' })
+      count.should == 1
     end
 
     it 'without key and with order clauses' do
-      result = Timeline.count(nil, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count(nil, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      count.should == 1
     end
 
     it 'without key and with limit clauses' do
       Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
-      result = Timeline.count(nil, { :limit => 1 })
-      result.size.should == 1
-      result[0]['count'].should == 1
+      count = Timeline.count(nil, { :limit => 1 })
+      count.should == 1
     end
 
     it 'with block processing' do
