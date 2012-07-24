@@ -7,8 +7,6 @@ group :development do
   gem "rdoc", "~> 3.12"
   gem "bundler", "~> 1.1.0"
   gem "jeweler", "~> 1.8.4"
-  gem 'ruby-debug', :platforms=>:ruby_18
-  gem 'ruby-debug19', :platforms=>:ruby_19
 end
 
 group :test do
@@ -18,6 +16,5 @@ end
 gem 'redcarpet'
 gem 'yard'
 
-gem 'active_support'
 gem "cassandra-cql", :git=>"git://github.com/kreynolds/cassandra-cql.git"
 

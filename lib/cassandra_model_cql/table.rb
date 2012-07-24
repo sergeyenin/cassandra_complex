@@ -14,16 +14,12 @@ module CassandraModelCql
   #     puts row['body']
   #   end
   class Table
-    class ConfigurationError < Exception; end
-
-    @id, @keyspace = nil, 'system'
-
     #not neccessary to allow .new
     private_class_method :new
 
     class << self
-      attr_accessor :last_error, :last_error_command
       attr_accessor :keyspace
+      attr_accessor :configuration
 
       def set_keyspace(kyspc)
         self.keyspace = kyspc
@@ -46,6 +42,16 @@ module CassandraModelCql
         @id
       end
 
+      def empty?
+        all.empty?
+      end
+
+      def truncate
+        command = "truncate #{table_name};"
+        rs = connection.execute(command, true, self)
+        true
+      end
+
       #raw query execution
       def execute(cql_query_string, &blck)
         rs = connection.execute(cql_query_string, true, self, &blck)
@@ -53,17 +59,22 @@ module CassandraModelCql
       end
 
       def all(key=nil, clauses={}, &blck)
-        command = build_select_clause(key, clauses.merge({:select_expression=>"*"}))
+        clauses.merge!({:select_expression=>"*"}) unless clauses[:select_expression]
+        command = build_select_clause(key, clauses)
         rs = connection.execute(command, true, self, &blck)
-        rs.rows || []
+        rs
       end
 
       alias find all
 
       def count(key=nil, clauses={}, &blck)
+        return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         rs = connection.execute(command, true, self, &blck)
-        rs.rows || []
+        if !rs.empty? && rs[0].has_key?('count')
+          return_value = rs[0]['count']
+        end
+        return_value
       end
 
       def create(clauses={}, options={})
@@ -72,14 +83,16 @@ module CassandraModelCql
         keys   = clauses.keys.join(', ')
         values = clauses.values.join(', ')
 
-        timestamp_clause = ''
-        timestamp_clause = "using timestamp #{options[:timestamp]}" if options[:timestamp]
+        options_clause = ''
 
-        command = "insert into #{table_name} (#{keys}) values (#{values}) #{timestamp_clause}"
+        if !options.empty?
+          options_clause = "using " + options.map{|x,y| ' ' + x.to_s + ' ' + y.to_s + ' '}.join(' AND ')
+        end
 
+        command = "insert into #{table_name} (#{keys}) values (#{values}) #{options_clause}"
         rs = connection.execute(command, true, self)
 
-        return (self.last_error  == nil)
+        return true
       end
 
       alias update create
@@ -98,19 +111,22 @@ module CassandraModelCql
 
         columns_clause = ''
         columns_clause = options[:columns].join(', ') if options[:columns]
-
         command = "delete #{columns_clause} from #{table_name} #{where_clause}"
         rs = connection.execute(command, true, self)
 
-        return (self.last_error  == nil)
+        return true
       end
 
-    private
+    protected
 
       def build_select_clause(key=nil, clauses={})
         where_clause = ''
         if key
-          where_clause = "where #{id} = '#{key}'"
+          if key.kind_of?(String)
+            where_clause = "where #{id} = #{key}"
+          elsif key.kind_of?(Array)
+            where_clause = "where #{id} in (#{key.join(', ')})"
+          end
           if !clauses.empty? && clauses[:where]
             where_clause << ' and ' + clauses[:where]
           end
@@ -119,10 +135,12 @@ module CassandraModelCql
         end
 
         order_clause = ''
-        if !clauses.empty? && clauses[:order]
-          order_clause = ' order by ' + clauses[:order]
+        limit_clause = ''
+        if !clauses.empty?
+          order_clause = ' order by ' + clauses[:order] if clauses[:order]
+          limit_clause = ' limit ' + clauses[:limit].to_s if clauses[:limit]
         end
-        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause}"
+        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause} #{limit_clause};"
         command
       end
     end
