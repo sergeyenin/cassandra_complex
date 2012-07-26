@@ -54,14 +54,19 @@ module CassandraModelCql
 
       #raw query execution
       def execute(cql_query_string, &blck)
-        rs = connection.execute(cql_query_string, true, self, &blck)
+        rs = connection.execute(cql_query_string, true, self, nil, &blck)
         rs
       end
 
       def all(key=nil, clauses={}, &blck)
         clauses.merge!({:select_expression=>"*"}) unless clauses[:select_expression]
         command = build_select_clause(key, clauses)
-        rs = connection.execute(command, true, self, &blck)
+        if clauses[:where].class == Array
+          bind = clauses[:where][1]
+        else
+          bind = nil
+        end
+        rs = connection.execute(command, true, self, bind, &blck)
         rs
       end
 
@@ -70,7 +75,12 @@ module CassandraModelCql
       def count(key=nil, clauses={}, &blck)
         return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
-        rs = connection.execute(command, true, self, &blck)
+        if clauses[:where].class == Array
+          bind = clauses[:where][1]
+        else
+          bind = nil
+        end
+        rs = connection.execute(command, true, self, bind, &blck)
         if !rs.empty? && rs[0].has_key?('count')
           return_value = rs[0]['count']
         end
@@ -120,6 +130,11 @@ module CassandraModelCql
     protected
 
       def build_select_clause(key=nil, clauses={})
+        if clauses[:where].class == Array
+          where = clauses[:where][0]
+        else
+          where = clauses[:where]
+        end
         where_clause = ''
         if key
           if key.kind_of?(String)
@@ -128,10 +143,10 @@ module CassandraModelCql
             where_clause = "where #{id} in (#{key.join(', ')})"
           end
           if !clauses.empty? && clauses[:where]
-            where_clause << ' and ' + clauses[:where]
+            where_clause << ' and ' + where
           end
         elsif !clauses.empty? && clauses[:where]
-          where_clause = 'where ' + clauses[:where]
+          where_clause = 'where ' + where
         end
 
         order_clause = ''

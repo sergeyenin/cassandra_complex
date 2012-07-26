@@ -51,14 +51,19 @@ module CassandraModelCql
     # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @param [CassandraModelCql::Table] table the table with describing schema
+    # @param [Array] binds for cql_string
     # @return [Array] row set
-    def execute(cql_string, multi_commands = true, table=nil, &blck)
+    def execute(cql_string, multi_commands = true, table=nil, bind=nil, &blck)
       row_set = []
       @mutex.synchronize {
         begin
           prepare_cql_statement(cql_string, multi_commands).each do |cql|
             if !(cql.strip.empty?)
-              new_rows = add_rows(@conn.execute(cql), &blck)
+              if bind
+                new_rows = add_rows(@conn.execute(cql,bind), &blck)
+              else
+                new_rows = add_rows(@conn.execute(cql), &blck)
+              end
               row_set << new_rows if new_rows
             end
           end
