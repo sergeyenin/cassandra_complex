@@ -109,9 +109,12 @@ module CassandraModelCql
           return false
         end
 
+        consistency_clause = ''
+        consistency_clause = " using consistency quorum and timestamp #{options[:timestamp]} " if options[:timestamp]
+
         columns_clause = ''
         columns_clause = options[:columns].join(', ') if options[:columns]
-        command = "delete #{columns_clause} from #{table_name} #{where_clause}"
+        command = "delete #{columns_clause} from #{table_name} #{consistency_clause} #{where_clause}"
         rs = connection.execute(command, true, self)
 
         return true

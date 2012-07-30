@@ -306,6 +306,11 @@ describe "Table" do
       Timeline.all.size.should == 1
     end
 
+    it 'supports timestamp' do
+       Timeline.delete("'test_user0' and tweet_id=0", { :timestamp=> (Time.now.to_i + 10) }).should == true
+       Timeline.all.size.should == 2
+    end
+
   end
 
 end
