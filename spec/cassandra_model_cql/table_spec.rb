@@ -142,8 +142,20 @@ describe "Table" do
       id_sum.should == 16
     end
 
-    it 'binding' do
+    it 'one binding key' do
       result = Timeline.all(nil, { :where => ['user_id = ?', 'test_user0'] })
+      result.size.should == 1
+      result[0]['user_id'].should == 'test_user0'
+    end
+
+    it 'two binding keys' do
+      result = Timeline.all(nil, { :where => ['user_id = ? and tweet_id = ?', 'test_user0', 16] })
+      result.size.should == 1
+      result[0]['user_id'].should == 'test_user0'
+    end
+
+    it 'few binding keys' do
+      result = Timeline.all(nil, { :where => ['user_id = ? and tweet_id > ? and tweet_id < ?', 'test_user0', 10, 20] })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end

@@ -54,7 +54,7 @@ module CassandraModelCql
 
       #raw query execution
       def execute(cql_query_string, &blck)
-        rs = connection.execute(cql_query_string, true, self, nil, &blck)
+        rs = connection.execute(cql_query_string, true, self, [], &blck)
         rs
       end
 
@@ -62,9 +62,9 @@ module CassandraModelCql
         clauses.merge!({:select_expression=>"*"}) unless clauses[:select_expression]
         command = build_select_clause(key, clauses)
         if clauses[:where].class == Array
-          bind = clauses[:where][1]
+          bind = clauses[:where][1..-1]
         else
-          bind = nil
+          bind = []
         end
         rs = connection.execute(command, true, self, bind, &blck)
         rs
@@ -76,9 +76,9 @@ module CassandraModelCql
         return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         if clauses[:where].class == Array
-          bind = clauses[:where][1]
+          bind = clauses[:where][1..-1]
         else
-          bind = nil
+          bind = []
         end
         rs = connection.execute(command, true, self, bind, &blck)
         if !rs.empty? && rs[0].has_key?('count')
