@@ -61,7 +61,7 @@ module CassandraModelCql
       def all(key=nil, clauses={}, &blck)
         clauses.merge!({:select_expression=>"*"}) unless clauses[:select_expression]
         command = build_select_clause(key, clauses)
-        if clauses[:where].class == Array
+        if clauses[:where].kind_of?(Array)
           bind = clauses[:where][1..-1]
         else
           bind = []
@@ -75,7 +75,7 @@ module CassandraModelCql
       def count(key=nil, clauses={}, &blck)
         return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
-        if clauses[:where].class == Array
+        if clauses[:where].kind_of?(Array)
           bind = clauses[:where][1..-1]
         else
           bind = []
@@ -130,7 +130,7 @@ module CassandraModelCql
     protected
 
       def build_select_clause(key=nil, clauses={})
-        if clauses[:where].class == Array
+        if clauses[:where].kind_of?(Array)
           where = clauses[:where][0]
         else
           where = clauses[:where]
