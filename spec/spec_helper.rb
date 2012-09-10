@@ -1,2 +1,2 @@
-require 'cassandra_model_cql'
-
+require 'bundler/setup'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'cassandra_complex'))

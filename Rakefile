@@ -13,13 +13,13 @@ rescue Bundler::BundlerError => e
   exit e.status_code
 end
 require 'rake'
-require 'cassandra_model_cql'
+require 'cassandra_complex'
 
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "cassandra_model_cql"
-  gem.homepage = "http://github.com/sergeyenin/cassandra_model_cql"
+  gem.name = "cassandra_complex"
+  gem.homepage = "http://github.com/sergeyenin/cassandra_complex"
   gem.license = "MIT"
   gem.summary = "Raw wrapper for Cassandra CQL3 operations."
   gem.description = "Raw wrapper for Cassandra CQL3 operations."
@@ -43,7 +43,7 @@ Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "cassandra_model_cql #{version}"
+  rdoc.title = "cassandra_complex #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end

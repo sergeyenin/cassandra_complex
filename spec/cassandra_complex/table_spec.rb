@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-class Timeline < CassandraModelCql::Table
+class Timeline < CassandraComplex::Table
 end
 
 describe "Table" do
 
   before :all do
-    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
-    conn.execute('CREATE KEYSPACE cassandra_model_cql_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
-    CassandraModelCql::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_model_cql_test'})
+    conn = CassandraComplex::Connection.new('127.0.0.1:9160')
+    conn.execute('CREATE KEYSPACE cassandra_complex_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
+    CassandraComplex::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_complex_test'})
     create_table_command = <<-eos
         CREATE TABLE timeline (
           user_id varchar,
@@ -21,9 +21,9 @@ describe "Table" do
   end
 
   after :all do
-    conn = CassandraModelCql::Connection.new('127.0.0.1:9160')
+    conn = CassandraComplex::Connection.new('127.0.0.1:9160')
     conn.execute('DROP TABLE timeline;')
-    conn.execute('DROP KEYSPACE cassandra_model_cql_test;')
+    conn.execute('DROP KEYSPACE cassandra_complex;')
   end
 
   context 'execute' do

@@ -1,8 +1,8 @@
-module CassandraModelCql
+module CassandraComplex
   # Class Table which wraps CQL3 operations
   #
   # @example Selecting all rows with given primary
-  #   class Timeline < CassandraModelCql::Table
+  #   class Timeline < CassandraComplex::Table
   #   end
   #
   #   rows = Timeline.all('some_primary_key') do |row|
@@ -26,7 +26,7 @@ module CassandraModelCql
       end
 
       def connection(kyspc=nil)
-        CassandraModelCql::Connection.connection(kyspc || self.keyspace)
+        CassandraComplex::Connection.connection(kyspc || self.keyspace)
       end
 
       def with_keyspace(kyspc, &blck)

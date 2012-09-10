@@ -1,7 +1,7 @@
-module CassandraModelCql
+module CassandraComplex
   # A composite index for table
   # @example
-  # class Timeline < CassandraModelCql::Model
+  # class Timeline < CassandraComplex::Model
   #
   #   set_keyspace 'history'
   #
@@ -13,14 +13,14 @@ module CassandraModelCql
   #   primary_key :user_id, :tweet_id
   # end
   #
-  # class Tweet < CassandraModelCql::Model
+  # class Tweet < CassandraComplex::Model
   #   set_keyspace 'history'
   #
   #   attribute :tweet_id, 'varchar'
   #   attribute :important_data, 'varchar'
   # end
   #
-  # class TwitIndex < CassandraModelCql::Index
+  # class TwitIndex < CassandraComplex::Index
   #   index :with_table=>Timeline  #, :attributes=>[:author, :author_tweet_id]
   #   indexing :table=> Tweet, :index=>[:tweet_id]
   #

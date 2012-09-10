@@ -1,0 +1,7 @@
+require 'cassandra-cql/1.1'
+require 'cassandra_complex/configuration'
+require 'cassandra_complex/row'
+require 'cassandra_complex/connection'
+require 'cassandra_complex/table'
+require 'cassandra_complex/model'
+require 'cassandra_complex/index'

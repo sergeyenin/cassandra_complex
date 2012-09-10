@@ -1,7 +1,7 @@
-module CassandraModelCql
+module CassandraComplex
   # ActiveRecord like sugared model
   # @example Using model
-  # class Timeline < CassandraModelCql::Model
+  # class Timeline < CassandraComplex::Model
   #
   #   set_keyspace 'history'
   #

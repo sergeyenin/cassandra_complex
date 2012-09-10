@@ -4,8 +4,8 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "cassandra_model_cql"
-  s.version = "0.3.0"
+  s.name = "cassandra_complex"
+  s.version = "0.3.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
@@ -24,21 +24,20 @@ Gem::Specification.new do |s|
     "README.md",
     "Rakefile",
     "VERSION",
-    "cassandra_model_cql.gemspec",
-    "lib/cassandra_model_cql.rb",
-    "lib/cassandra_model_cql/configuration.rb",
-    "lib/cassandra_model_cql/connection.rb",
-    "lib/cassandra_model_cql/index.rb",
-    "lib/cassandra_model_cql/model.rb",
-    "lib/cassandra_model_cql/row.rb",
-    "lib/cassandra_model_cql/table.rb",
-    "spec/cassandra_model_cql/table_spec.rb",
-    "spec/cassandra_model_cql_spec.rb",
+    "cassandra_complex.gemspec",
+    "lib/cassandra_complex.rb",
+    "lib/cassandra_complex/configuration.rb",
+    "lib/cassandra_complex/connection.rb",
+    "lib/cassandra_complex/index.rb",
+    "lib/cassandra_complex/model.rb",
+    "lib/cassandra_complex/row.rb",
+    "lib/cassandra_complex/table.rb",
+    "spec/cassandra_complex/table_spec.rb",
     "spec/spec_helper.rb",
     "test/helper.rb",
     "test/test_cassandra_model_cql.rb"
   ]
-  s.homepage = "http://github.com/sergeyenin/cassandra_model_cql"
+  s.homepage = "http://github.com/sergeyenin/cassandra_complex"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.24"

@@ -1,4 +1,4 @@
-module CassandraModelCql
+module CassandraComplex
 
   class ConfigurationError < Exception
   end

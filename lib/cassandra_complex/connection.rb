@@ -1,6 +1,6 @@
 require 'thread'
 
-module CassandraModelCql
+module CassandraComplex
   # Basic class which encapsulate driver` connection to a Cassandra cluster.
   # It executes raw CQL and can return result sets in two ways.
   #
@@ -24,10 +24,10 @@ module CassandraModelCql
       # Create( if not exists or not active) and return connection to kyspc
       #
       # @param [String] kyspc ('system') The keyspace to which connect
-      # @return [CassandraModelCql::Connection] Connection instance
+      # @return [CassandraComplex::Connection] Connection instance
       def connection(kyspc=nil)
 	raise MissingConfiguration if Configuration.host.nil? || Configuration.default_keyspace.nil?
-        @@connections[kyspc] = CassandraModelCql::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
+        @@connections[kyspc] = CassandraComplex::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
         @@connections[kyspc]
       end
@@ -39,7 +39,7 @@ module CassandraModelCql
     # @param [Array, String] hosts list of hosts, a single host, to connect to
     # @param [Hash] options list of options
     # @option options [String] keyspace initial keyspace to connect; defaults to 'system'
-    # @return [CassandraModelCql::Connection] new instance
+    # @return [CassandraComplex::Connection] new instance
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
       @conn = CassandraCQL::Database.new(hosts, options.merge({:cql_version=>'3.0.0'}))
@@ -50,7 +50,7 @@ module CassandraModelCql
     #
     # @param [Array, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
-    # @param [CassandraModelCql::Table] table the table with describing schema
+    # @param [CassandraComplex::Table] table the table with describing schema
     # @param [Array] binds for cql string
     # @return [Array] row set
     def execute(cql_string, multi_commands = true, table=nil, bind=[], &blck)
