@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-07-17"
+  s.date = "2012-09-10"
   s.description = "Raw wrapper for Cassandra CQL3 operations."
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
