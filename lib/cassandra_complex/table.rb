@@ -21,8 +21,6 @@ module CassandraComplex
       attr_accessor :keyspace
       attr_accessor :configuration
 
-      attr_reader   :tbl_name
-
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
@@ -36,11 +34,11 @@ module CassandraComplex
       end
 
       def set_table_name(tbl)
-        self.tbl_name = tbl
+        @tbl_name = tbl
       end
 
       def table_name
-        self.tbl_name || self.name.downcase
+        @tbl_name || self.name.downcase
       end
 
       def id
