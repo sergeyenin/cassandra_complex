@@ -29,6 +29,7 @@ module CassandraComplex
 	raise MissingConfiguration if Configuration.host.nil? || Configuration.default_keyspace.nil?
         @@connections[kyspc] = CassandraComplex::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
+        Configuration.logger.info "Connected to: #{Configuration.host}:#{Configuration.default_keyspace}"
         @@connections[kyspc]
       end
     end
@@ -62,12 +63,14 @@ module CassandraComplex
               if bind.size > 0
                 cql = CassandraCQL::Statement.sanitize(cql, bind)
               end
+              Configuration.logger.info "Going to execute CQL: '#{cql}'"
               new_rows = add_rows(@conn.execute(cql), &blck)
               row_set << new_rows if new_rows
             end
           end
         ensure
-          return row_set.flatten
+          row_set_flatten = row_set.flatten
+          return row_set_flatten
         end
       }
     end

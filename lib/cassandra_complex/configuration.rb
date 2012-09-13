@@ -17,6 +17,8 @@ module CassandraComplex
       attr_reader :host
       attr_reader :default_keyspace
 
+      attr_reader :logger
+
       # Load yaml source
       #
       # === Parameters
@@ -41,7 +43,14 @@ module CassandraComplex
         end
         @host = return_value['host']
         @default_keyspace = return_value['default_keyspace']
+
+        @logger = Logger.new('/dev/null')
+
         return_value
+      end
+
+      def logger=(new_logger)
+        @logger = new_logger
       end
 
     end

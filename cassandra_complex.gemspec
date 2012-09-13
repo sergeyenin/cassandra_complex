@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "cassandra_complex"
-  s.version = "0.3.6"
+  s.version = "0.3.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-09-12"
+  s.date = "2012-09-13"
   s.description = "Raw wrapper for Cassandra CQL3 operations."
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
