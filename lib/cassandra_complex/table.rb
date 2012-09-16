@@ -63,20 +63,36 @@ module CassandraComplex
       end
 
       def all(key=nil, clauses={}, &blck)
-        clauses.merge!({:select_expression=>"*"}) unless clauses[:select_expression]
+        key = nil if key == :all
+
+        return_value = nil
+
+        if (!clauses[:select_expression])
+          if (clauses[:distinct])
+            clauses.merge!({:select_expression=>clauses[:distinct]})
+          else
+            clauses.merge!({:select_expression=>"*"})
+          end
+        end
+
         command = build_select_clause(key, clauses)
         if clauses[:where].kind_of?(Array)
           bind = clauses[:where][1..-1]
         else
           bind = []
         end
-        rs = connection.execute(command, true, self, bind, &blck)
-        rs
+        return_value = connection.execute(command, true, self, bind, &blck)
+
+        #distinct
+        return_value = return_value.map{|row| row[clauses[:distinct]]}.uniq if clauses[:distinct]
+
+        return_value
       end
 
       alias find all
 
       def count(key=nil, clauses={}, &blck)
+        key = nil if key == :all
         return_value = nil
         command = build_select_clause(key, clauses.merge({:select_expression=>"count(1)"}))
         if clauses[:where].kind_of?(Array)
@@ -88,6 +104,7 @@ module CassandraComplex
         if !rs.empty? && rs[0].has_key?('count')
           return_value = rs[0]['count']
         end
+
         return_value
       end
 

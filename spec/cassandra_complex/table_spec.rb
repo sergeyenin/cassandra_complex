@@ -63,14 +63,25 @@ describe "Table" do
 
   end
 
-  context "table_name" do
-    it "returns correct table name" do
+  context 'table_name' do
+    it 'returns correct table name' do
       Timeline.table_name.should == 'timeline'
     end
+
+    it 'set proper table_name' do
+      module SomeModule
+        class Timeline < CassandraComplex::Table
+          set_table_name 'timeline'
+        end
+      end
+
+      SomeModule::Timeline.table_name.should == 'timeline'
+    end
+
   end
 
-  context "id" do
-    it "returns correct id" do
+  context 'id' do
+    it 'returns correct id' do
       Timeline.id.should == 'user_id'
     end
   end
@@ -113,25 +124,25 @@ describe "Table" do
     end
 
     it 'without key and with where clauses' do
-      result = Timeline.all(nil, { :where => 'user_id = \'test_user0\'' })
+      result = Timeline.all(:all, { :where => 'user_id = \'test_user0\'' })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
     it 'without key and with order clauses' do
-      result = Timeline.all(nil, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      result = Timeline.all(:all, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
     it 'without key and with limit clauses' do
       Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"})
-      result = Timeline.all(nil, { :limit => 1 })
+      result = Timeline.all(:all, { :limit => 1 })
       result.size.should == 1
     end
 
     it 'select expression' do
-      result = Timeline.all(nil, { :select_expression => 'user_id, author' })
+      result = Timeline.all(:all, { :select_expression => 'user_id, author' })
       result[0]['user_id'].should_not == nil
       result[0]['body'].should == nil
     end
@@ -143,23 +154,32 @@ describe "Table" do
     end
 
     it 'one binding key' do
-      result = Timeline.all(nil, { :where => ['user_id = ?', 'test_user0'] })
+      result = Timeline.all(:all, { :where => ['user_id = ?', 'test_user0'] })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
     it 'two binding keys' do
-      result = Timeline.all(nil, { :where => ['user_id = ? and tweet_id = ?', 'test_user0', 16] })
+      result = Timeline.all(:all, { :where => ['user_id = ? and tweet_id = ?', 'test_user0', 16] })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
     it 'few binding keys' do
-      result = Timeline.all(nil, { :where => ['user_id = ? and tweet_id > ? and tweet_id < ?', 'test_user0', 10, 20] })
+      result = Timeline.all(:all, { :where => ['user_id = ? and tweet_id > ? and tweet_id < ?', 'test_user0', 10, 20] })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
+    it 'distinct values' do
+      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '17', 'author' => "'test_author1'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author2'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '17', 'author' => "'test_author3'", 'body' => "'test_body0'"})
+
+      Timeline.all("'test_user0'", {:where => ['tweet_id = ?', 17], :distinct => 'author'}).should == ['test_author1']
+      Timeline.all("'test_user1'", {:distinct => 'tweet_id'}).sort.should == [16, 17]
+
+    end
   end
 
   context 'count' do
@@ -199,18 +219,18 @@ describe "Table" do
     end
 
     it 'without key and with where clauses' do
-      count = Timeline.count(nil, { :where => 'user_id = \'test_user0\'' })
+      count = Timeline.count(:all, { :where => 'user_id = \'test_user0\'' })
       count.should == 1
     end
 
     it 'without key and with order clauses' do
-      count = Timeline.count(nil, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      count = Timeline.count(:all, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
       count.should == 1
     end
 
     it 'without key and with limit clauses' do
       Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
-      count = Timeline.count(nil, { :limit => 1 })
+      count = Timeline.count(:all, { :limit => 1 })
       count.should == 1
     end
 
