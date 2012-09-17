@@ -1,2 +1,3 @@
 0.3.7
   * Added logging support.
+  * Added distinct functionality to .all.
