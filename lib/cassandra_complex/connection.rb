@@ -43,6 +43,7 @@ module CassandraComplex
     # @return [CassandraComplex::Connection] new instance
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
+      Configuration.logger.info "Connecting to #{hosts.inspect} with params #{options.inspect}"
       @conn = CassandraCQL::Database.new(hosts, options.merge({:cql_version=>'3.0.0'}))
       @mutex = Mutex.new
     end
