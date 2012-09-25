@@ -112,7 +112,7 @@ module CassandraComplex
         return false if clauses.empty?
 
         keys   = clauses.keys.join(', ')
-        values = clauses.values.join(', ')
+        values = clauses.values.map{|x| !!options[:sanitize] ? x : CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(x))}.join(', ')
 
         options_clause = ''
 

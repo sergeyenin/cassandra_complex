@@ -3,6 +3,8 @@ require 'spec_helper'
 class Timeline < CassandraComplex::Table
 end
 
+CassandraComplex::Configuration.logger = Logger.new(STDOUT)
+
 describe "Table" do
 
   before :all do
@@ -89,7 +91,7 @@ describe "Table" do
   context 'all' do
 
     before(:each) do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '16', 'author' => "'test_author0'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 16, 'author' => 'test_author0', 'body' => 'test_body0'})
     end
 
     after(:each) do
@@ -118,7 +120,7 @@ describe "Table" do
     end
 
     it 'with array key' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
       result = Timeline.all(["'test_user0'","'test_user1'"])
       result.size.should == 2
     end
@@ -172,9 +174,9 @@ describe "Table" do
     end
 
     it 'distinct values' do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '17', 'author' => "'test_author1'", 'body' => "'test_body0'"})
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author2'", 'body' => "'test_body0'"})
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '17', 'author' => "'test_author3'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 17, 'author' => 'test_author1', 'body' => 'test_body0'})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author2', 'body' => 'test_body0'})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 17, 'author' => 'test_author3', 'body' => 'test_body0'})
 
       Timeline.all("'test_user0'", {:where => ['tweet_id = ?', 17], :distinct => 'author'}).should == ['test_author1']
       Timeline.all("'test_user1'", {:distinct => 'tweet_id'}).sort.should == [16, 17]
@@ -185,7 +187,7 @@ describe "Table" do
   context 'count' do
 
     before(:each) do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '16', 'author' => "'test_author0'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 16, 'author' => 'test_author0', 'body' => 'test_body0'})
     end
 
     after(:each) do
@@ -213,7 +215,7 @@ describe "Table" do
     end
 
     it 'with array key' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author1', 'body' => 'test_body1'})
       count = Timeline.count(["'test_user0'","'test_user1'"])
       count.should == 2
     end
@@ -229,13 +231,13 @@ describe "Table" do
     end
 
     it 'without key and with limit clauses' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author1', 'body' => 'test_body1'})
       count = Timeline.count(:all, { :limit => 1 })
       count.should == 1
     end
 
     it 'with block processing' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '16', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author1', 'body' => 'test_body1'})
       id_sum = 0
       Timeline.count { |element| id_sum += element['count'] }
       id_sum.should == 2
@@ -254,15 +256,15 @@ describe "Table" do
     end
 
     it 'create record' do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
       timelines = Timeline.all("'test_user0'")
       timelines.size.should == 1
       timelines[0]['user_id'].should == 'test_user0'
     end
 
     it 'timestamp' do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"}, { :timestamp => 2 })
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author1'", 'body' => "'test_body1'"}, { :timestamp => 1 })
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :timestamp => 2 })
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author1', 'body' => 'test_body1'}, { :timestamp => 1 })
       Timeline.all.size.should == 1
       result = Timeline.all("'test_user0'")
       result.size.should == 1
@@ -270,7 +272,7 @@ describe "Table" do
     end
 
     it 'ttl' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"}, { :ttl => 1 })
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'}, { :ttl => 1 })
       result = Timeline.all("'test_user1'")
       result.size.should == 1
       sleep(2)
@@ -291,23 +293,23 @@ describe "Table" do
     end
 
     it 'update record' do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"})
-      Timeline.update({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
+      Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body1'})
       result = Timeline.all("'test_user0'")
       result.size.should == 1
       result[0]['body'].should == 'test_body1'
     end
 
     it 'timestamp' do
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"}, { :timestamp => 2 })
-      Timeline.update({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body1'"}, { :timestamp => 1 })
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :timestamp => 2 })
+      Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body1'}, { :timestamp => 1 })
       result = Timeline.all("'test_user0'")
       result.size.should == 1
       result[0]['author'].should == 'test_author0'
     end
 
     it 'ttl' do
-      Timeline.update({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"}, { :ttl => 1 })
+      Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :ttl => 1 })
       result = Timeline.all("'test_user0'")
       result.size.should == 1
       sleep(2)
@@ -320,8 +322,8 @@ describe "Table" do
   context 'delete' do
     before (:each) do
       Timeline.truncate
-      Timeline.create({'user_id' => "'test_user0'", 'tweet_id' => '0', 'author' => "'test_author0'", 'body' => "'test_body0'"})
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
     end
 
     after (:each) do
