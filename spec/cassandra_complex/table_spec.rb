@@ -104,24 +104,24 @@ describe "Table" do
     end
 
     it 'with key' do
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
 
     it 'with not existing key' do
-      result = Timeline.all("'test_'")
+      result = Timeline.all('test_')
       result.size.should == 0
     end
 
     it 'with key and where clauses' do
-      result = Timeline.all("'test_user0'", { :where => 'tweet_id = 16' })
+      result = Timeline.all('test_user0', { :where => 'tweet_id = 16' })
       result.size.should == 1
     end
 
     it 'with array key' do
       Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
-      result = Timeline.all(["'test_user0'","'test_user1'"])
+      result = Timeline.all(['test_user0', 'test_user1'])
       result.size.should == 2
     end
 
@@ -138,7 +138,7 @@ describe "Table" do
     end
 
     it 'without key and with limit clauses' do
-      Timeline.create({'user_id' => "'test_user1'", 'tweet_id' => '1', 'author' => "'test_author1'", 'body' => "'test_body1'"})
+      Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
       result = Timeline.all(:all, { :limit => 1 })
       result.size.should == 1
     end
@@ -178,8 +178,8 @@ describe "Table" do
       Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author2', 'body' => 'test_body0'})
       Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 17, 'author' => 'test_author3', 'body' => 'test_body0'})
 
-      Timeline.all("'test_user0'", {:where => ['tweet_id = ?', 17], :distinct => 'author'}).should == ['test_author1']
-      Timeline.all("'test_user1'", {:distinct => 'tweet_id'}).sort.should == [16, 17]
+      Timeline.all('test_user0', {:where => ['tweet_id = ?', 17], :distinct => 'author'}).should == ['test_author1']
+      Timeline.all('test_user1', {:distinct => 'tweet_id'}).sort.should == [16, 17]
 
     end
   end
@@ -200,23 +200,23 @@ describe "Table" do
     end
 
     it 'with key' do
-      count = Timeline.count("'test_user0'")
+      count = Timeline.count('test_user0')
       count.should == 1
     end
 
     it 'with not existing key' do
-      count = Timeline.count("'test_'")
+      count = Timeline.count('test_')
       count.should == 0
     end
 
     it 'with key and where clauses' do
-      count = Timeline.count("'test_user0'", { :where => 'tweet_id >= 10' })
+      count = Timeline.count('test_user0', { :where => 'tweet_id >= 10' })
       count.should == 1
     end
 
     it 'with array key' do
       Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author1', 'body' => 'test_body1'})
-      count = Timeline.count(["'test_user0'","'test_user1'"])
+      count = Timeline.count(['test_user0', 'test_user1'])
       count.should == 2
     end
 
@@ -257,7 +257,7 @@ describe "Table" do
 
     it 'create record' do
       Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
-      timelines = Timeline.all("'test_user0'")
+      timelines = Timeline.all('test_user0')
       timelines.size.should == 1
       timelines[0]['user_id'].should == 'test_user0'
     end
@@ -266,17 +266,17 @@ describe "Table" do
       Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :timestamp => 2 })
       Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author1', 'body' => 'test_body1'}, { :timestamp => 1 })
       Timeline.all.size.should == 1
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 1
       result[0]['author'].should == 'test_author0'
     end
 
     it 'ttl' do
       Timeline.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'}, { :ttl => 1 })
-      result = Timeline.all("'test_user1'")
+      result = Timeline.all('test_user1')
       result.size.should == 1
       sleep(2)
-      result = Timeline.all("'test_user1'")
+      result = Timeline.all('test_user1')
       result.size.should == 0
     end
 
@@ -295,7 +295,7 @@ describe "Table" do
     it 'update record' do
       Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
       Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body1'})
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 1
       result[0]['body'].should == 'test_body1'
     end
@@ -303,17 +303,17 @@ describe "Table" do
     it 'timestamp' do
       Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :timestamp => 2 })
       Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body1'}, { :timestamp => 1 })
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 1
       result[0]['author'].should == 'test_author0'
     end
 
     it 'ttl' do
       Timeline.update({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'}, { :ttl => 1 })
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 1
       sleep(2)
-      result = Timeline.all("'test_user0'")
+      result = Timeline.all('test_user0')
       result.size.should == 0
     end
 
@@ -327,18 +327,18 @@ describe "Table" do
     end
 
     after (:each) do
-     Timeline.delete("'test_user0'")
-     Timeline.delete("'test_user1'")
+     Timeline.delete('test_user0')
+     Timeline.delete('test_user1')
     end
 
     it 'single key' do
-      Timeline.delete("'test_user0'").should == true
-      Timeline.all("'test_user0'").size.should == 0
+      Timeline.delete('test_user0').should == true
+      Timeline.all('test_user0').size.should == 0
     end
 
     it 'array key' do
-      Timeline.delete(["'test_user0'","'test_user1'"]).should == true
-      Timeline.all(["'test_user0'", "'test_user1'"]).size.should == 0
+      Timeline.delete(['test_user0', 'test_user1']).should == true
+      Timeline.all(['test_user0', 'test_user1']).size.should == 0
     end
 
     it 'single key with options' do

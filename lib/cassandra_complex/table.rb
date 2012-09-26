@@ -133,9 +133,10 @@ module CassandraComplex
 
         where_clause = ''
         if key.kind_of?(Array)
-          where_clause = " where #{id} in (#{key.join(', ')})"
+          where_clause = " where #{id} in (#{key.map{|x| CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(x))}.join(', ')})"
         elsif key.kind_of?(String)
-          where_clause = " where #{id} = #{key}"
+          sanitized_key = CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(key)) unless key.match(/\sand\s/)
+          where_clause = " where #{id} = #{sanitized_key || key}"
         else
           return false
         end
@@ -162,9 +163,9 @@ module CassandraComplex
         where_clause = ''
         if key
           if key.kind_of?(String)
-            where_clause = "where #{id} = #{key}"
+            where_clause = "where #{id} = #{CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(key))}"
           elsif key.kind_of?(Array)
-            where_clause = "where #{id} in (#{key.join(', ')})"
+            where_clause = "where #{id} in (#{key.map{|x| CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(x))}.join(', ')})"
           end
           if !clauses.empty? && clauses[:where]
             where_clause << ' and ' + where
