@@ -339,17 +339,23 @@ describe "Table" do
 
     it 'array key' do
       TimelineTable.delete(['test_user0', 'test_user1']).should == true
-      TimelineTable.all(['test_user0', 'test_user1']).size.should == 0
+      TimelineTable.delete(['test_user0', 'test_user1']).should == true
+      TimelineTable.all.size.should == 0
+    end
+
+    it 'supports bind' do
+      TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user0', '0']})
+      TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user1', '1']})
     end
 
     it 'single key with options' do
-      TimelineTable.delete("'test_user0' and tweet_id=0", {:columns => ['author', 'body']}).should == true
+      TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user0', '0'], :columns => ['author', 'body']})
       TimelineTable.all.size.should == 1
     end
 
     it 'supports timestamp' do
-       TimelineTable.delete("'test_user0' and tweet_id=0", { :timestamp=> (Time.now.to_i + 10) }).should == true
-       TimelineTable.all.size.should == 2
+      TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user0', '0'], :timestamp=> (Time.now.to_i + 10) }).should == true
+      TimelineTable.all.size.should == 2
     end
 
   end

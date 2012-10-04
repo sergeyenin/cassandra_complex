@@ -129,17 +129,9 @@ module CassandraComplex
       alias update create
 
       def delete(key=nil,options={})
-        return false unless key
+        return false unless (key || options.has_key?(:where))
 
-        where_clause = ''
-        if key.kind_of?(Array)
-          where_clause = " where #{id} in (#{key.map{|x| CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(x))}.join(', ')})"
-        elsif key.kind_of?(String)
-          sanitized_key = CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(key)) unless key.match(/\sand\s/)
-          where_clause = " where #{id} = #{sanitized_key || key}"
-        else
-          return false
-        end
+        where_clause = build_where_clause(key, options)
 
         consistency_clause = ''
         consistency_clause = " using consistency quorum and timestamp #{options[:timestamp]} " if options[:timestamp]
@@ -147,7 +139,13 @@ module CassandraComplex
         columns_clause = ''
         columns_clause = options[:columns].join(', ') if options[:columns]
         command = "delete #{columns_clause} from #{table_name} #{consistency_clause} #{where_clause}"
-        rs = connection.execute(command, true, self)
+
+        if options[:where].kind_of?(Array)
+          bind = options[:where][1..-1]
+        else
+          bind = []
+        end
+        rs = connection.execute(command, true, self, bind)
 
         return true
       end
@@ -155,12 +153,25 @@ module CassandraComplex
     protected
 
       def build_select_clause(key=nil, clauses={})
+        where_clause = build_where_clause(key, clauses)
+
+        order_clause = ''
+        limit_clause = ''
+        if !clauses.empty?
+          order_clause = ' order by ' + clauses[:order] if clauses[:order]
+          limit_clause = ' limit ' + clauses[:limit].to_s if clauses[:limit]
+        end
+        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause} #{limit_clause};"
+        command
+      end
+
+      def build_where_clause(key, clauses)
+        where_clause = ''
         if clauses[:where].kind_of?(Array)
           where = clauses[:where][0]
         else
           where = clauses[:where]
         end
-        where_clause = ''
         if key
           if key.kind_of?(String)
             where_clause = "where #{id} = #{CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(key))}"
@@ -173,16 +184,9 @@ module CassandraComplex
         elsif !clauses.empty? && clauses[:where]
           where_clause = 'where ' + where
         end
-
-        order_clause = ''
-        limit_clause = ''
-        if !clauses.empty?
-          order_clause = ' order by ' + clauses[:order] if clauses[:order]
-          limit_clause = ' limit ' + clauses[:limit].to_s if clauses[:limit]
-        end
-        command = "select #{clauses[:select_expression]} from #{table_name} #{where_clause} #{order_clause} #{limit_clause};"
-        command
+        where_clause
       end
+
     end
   end
 end
