@@ -111,4 +111,34 @@ describe 'Model' do
 
   end
 
+  context 'all, find, count, etc' do
+
+    before (:each) do
+      TimelineModel.truncate
+      TimelineModel.create!({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
+      TimelineModel.create!({'user_id' => 'test_user0', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+      TimelineModel.create!({'user_id' => 'test_user2', 'tweet_id' => 2, 'author' => 'test_author2', 'body' => 'test_body2'})
+      TimelineModel.create!({'user_id' => 'test_user3', 'tweet_id' => 3, 'author' => 'test_author3', 'body' => 'test_body3'})
+    end
+
+
+    it 'count' do
+      TimelineModel.count.should == 4
+      TimelineModel.count('test_user0').should == 2
+      TimelineModel.count(:all, {:where=>['user_id = ? and tweet_id = ?', 'test_user0', 0]}).should == 1
+      TimelineModel.count({'user_id' => 'test_user0'}).should == 2
+    end
+
+    it 'all' do
+      TimelineModel.all.size.should == 4
+      TimelineModel.all({:where=>['user_id = ?', 'test_user0']}).size.should == 2
+    end
+
+    it 'find' do
+      TimelineModel.find(:all).size.should == 4
+      TimelineModel.find(:all, {:where=>['user_id = ?', 'test_user0']}).size.should == 2
+      TimelineModel.find({'user_id' => 'test_user0', 'tweet_id' => 1}).size.should  == 1
+    end
+  end
+
 end
