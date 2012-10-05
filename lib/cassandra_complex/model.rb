@@ -82,7 +82,8 @@ module CassandraComplex
           @@attributes[attr_name][:value]
         end
         define_method(:"#{attr_name}=") do |value|
-          @@attributes[attr_name][:value] = value
+          @@attributes[attr_name][:value]  = value
+          @@attributes[attr_name][:dirty?] = true
         end
       end
 
@@ -150,6 +151,14 @@ module CassandraComplex
     #instance
     #
 
+    def dirty?
+      return_value = false
+      @@attributes.each_value |attr_value|
+        return_value = true if attr_value[:dirty?]
+      end
+      return_value
+    end
+
     #instance` methods
     def initialize(hsh = {})
       hsh.each_pair do |key, value|
@@ -157,6 +166,7 @@ module CassandraComplex
           raise WrongModelInitialization, "Can`t initialize Model with attribute - #{key} ,that are not described in Model definition."
         else
           @@attributes[key.intern][:value] = value
+          @@attributes[key.intern][:dirty?] = true
         end
       end
 
@@ -173,6 +183,7 @@ module CassandraComplex
       return true
     end
 
+    #todo: save just columns which are neccessary
     def save!
       insert_hash = {}
 
@@ -181,12 +192,23 @@ module CassandraComplex
       end
 
       @@table.create(insert_hash)
+      self.dirty? = false, @@attributes.select{|attr_name, attr_value| attr_value[:dirty?]}.keys
     end
 
     def delete
       delete_hash = {}
       @@primary_key.map{|pk| delete_hash[pk.to_s]=self.send(pk)}
       @@table.delete(delete_hash)
+      self.dirty? = false
+    end
+
+    private
+
+    def dirty?=(new_dirty_value, columns = nil)
+      columns ||= @@attributes.keys
+      @@attributes.each_key do |attr_name|
+        @@attributes[attr_name][:dirty?] = new_dirty_value
+      end
     end
 
   end

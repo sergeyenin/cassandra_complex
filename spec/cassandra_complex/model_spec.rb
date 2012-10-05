@@ -29,6 +29,10 @@ describe 'Model' do
   end
 
   context 'basic operations' do
+    before :each do
+      TimelineModel.truncate
+    end
+
     it 'returns schema' do
       TimelineModel.schema.should == {:table => 'timeline', :attributes=>{:user_id => 'varchar', :tweet_id => 'int', :author => 'varchar', :body => 'varchar'}, :primary_key => [:user_id, :tweet_id]}
     end
@@ -38,6 +42,19 @@ describe 'Model' do
       timeline2 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
 
       timeline1.should == timeline2
+    end
+
+    it 'implements dirtiness' do
+      timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'}
+      timeline1.dirty?.should == true
+
+      timeline1.save!
+      timeline1.dirty?.should == false
+
+      timeline1 == TimelineModel.all[0]
+      timeline1.dirty?.should == false
+      timeline1.author = 'test_author42'
+      timeline1.dirty?.should == true
     end
   end
 
