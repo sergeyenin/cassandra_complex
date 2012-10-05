@@ -116,8 +116,8 @@ describe "Table" do
     end
 
     it 'with key and where clauses' do
-      result = TimelineTable.all('test_user0', { :where => 'tweet_id = 16' })
-      result.size.should == 1
+      TimelineTable.all('test_user0', { :where => 'tweet_id = 16' }).size.should == 1
+      TimelineTable.all({'user_id' => 'test_user0', 'tweet_id' => 16}).size.should == 1
     end
 
     it 'with array key' do
@@ -133,7 +133,7 @@ describe "Table" do
     end
 
     it 'without key and with order clauses' do
-      result = TimelineTable.all(:all, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      result = TimelineTable.all({'user_id' => 'test_user0'}, {:order => 'tweet_id' })
       result.size.should == 1
       result[0]['user_id'].should == 'test_user0'
     end
@@ -227,7 +227,8 @@ describe "Table" do
     end
 
     it 'without key and with order clauses' do
-      count = TimelineTable.count(:all, {:where => 'user_id = \'test_user0\'', :order => 'tweet_id' })
+      TimelineTable.create({'user_id' => 'test_user1', 'tweet_id' => 16, 'author' => 'test_author1', 'body' => 'test_body1'})
+      count = TimelineTable.count({'user_id' => 'test_user0'}, {:order => 'tweet_id' })
       count.should == 1
     end
 

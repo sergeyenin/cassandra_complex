@@ -177,6 +177,8 @@ module CassandraComplex
             where_clause = "where #{id} = #{CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(key))}"
           elsif key.kind_of?(Array)
             where_clause = "where #{id} in (#{key.map{|x| CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(x))}.join(', ')})"
+          elsif key.kind_of?(Hash)
+            where_clause = "where " + key.map{|x,y| "#{x} = #{CassandraCQL::Statement.quote(CassandraCQL::Statement.cast_to_cql(y))}"}.join(' and ')
           end
           if !clauses.empty? && clauses[:where]
             where_clause << ' and ' + where
