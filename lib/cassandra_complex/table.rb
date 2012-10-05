@@ -66,7 +66,6 @@ module CassandraComplex
         key = nil if key == :all
 
         return_value = nil
-
         if (!clauses[:select_expression])
           if (clauses[:distinct])
             clauses.merge!({:select_expression=>clauses[:distinct]})

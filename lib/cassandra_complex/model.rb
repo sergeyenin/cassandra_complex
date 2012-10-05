@@ -17,7 +17,7 @@ module CassandraComplex
   # Timeline.create_table
   #
   # t = Timeline.new(:user_id=>'mickey', :tweet_id=>1715, :author=> 'mouse', :body=>"'Hello!'")
-  # t.save
+  # t.save!
   #
   # timelines = Timeline.all('mickey')
   # t = timelines.first
@@ -32,6 +32,156 @@ module CassandraComplex
   #
   # #dropping Column Family
   # Timeline.drop_table
-  class Model < Table
+  class ModelError < Exception
+  end
+
+  class WrongModelDefinition < ModelError
+  end
+
+  class WrongModelInitialization < ModelError
+  end
+
+  class Model
+    #class` methods
+    class << self
+      attr_accessor :table_name
+
+      @@table       = nil
+      @@table_name  = ''
+
+      @@attributes  = {}
+      @@primary_key = []
+
+      def primary_key
+        @@primary_key
+      end
+
+      def primary_key(*attr_names)
+        attr_names.each do |attr_name|
+          raise WrongModelDefinition, 'Primary key could be choosen just from already introduced attribute.' unless @@attributes.has_key?(attr_name.intern)
+          @@primary_key << attr_name.intern
+        end
+      end
+
+      def attributes
+        @@attributes
+      end
+
+      def attribute(attr_name, attr_type)
+        attr_name = attr_name.intern
+        raise WrongModelDefinition, 'You can`t redefine already introduced attribute.' if self.instance_methods.include?(name)
+
+        @@attributes[attr_name] = {:type => attr_type}
+        define_method(attr_name) do
+          @@attributes[attr_name][:value]
+        end
+        define_method(:"#{attr_name}=") do |value|
+          @@attributes[attr_name][:value] = value
+        end
+      end
+
+      def table(table_name)
+        @@table_name = table_name.to_s.downcase
+        @@table      = Class.new(CassandraComplex::Table) do
+          set_table_name @@table_name
+        end
+      end
+
+      def count(key=nil, clauses={}, &blck)
+        key = nil if key == :all
+        return_value = 0
+
+        return_value = @@table.count(key, clauses, &blck)
+
+        return_value
+      end
+
+      def all(clauses={}, &blck)
+        find(:all, clauses, &blck)
+      end
+
+      def find(key=nil, clauses={}, &blck)
+        return_value = []
+        key = nil if key == :all
+        @@table.find(key, clauses).each do |record|
+          new_instance = self.new(record)
+          return_value << new_instance
+          blck.call(new_instance) if block_given?
+        end
+        return_value
+      	end
+
+      def delete(key, hsh={}, &blck)
+        key = nil if key == :all
+        @@table.delete(key, hsh, &blck)
+      end
+
+      def create!(hsh={})
+        new_model = self.new(hsh)
+        new_model.save!
+        new_model
+      end
+
+      def create_table!
+        attr = @@attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
+        p_key = ''
+        p_key = " PRIMARY KEY (#{@@primary_key.map{|x| x.to_s}.join(', ')})"
+        create_table_command = <<-eos
+          CREATE TABLE @@table_name (
+            #{attr}
+            #{p_key}
+          );
+        eos
+        @@table.execute(create_table_command)
+      end
+
+      def truncate
+        @@table.truncate
+      end
+    end
+
+    #
+    #instance
+    #
+
+    #instance` methods
+    def initialize(hsh = {})
+      hsh.each_pair do |key, value|
+        if @@attributes.has_key?(key)
+          raise WrongModelInitialization, "Can`t initialize Model with attribute - #{key} ,that are not described in Model definition."
+        else
+          @@attributes[key.intern][:value] = value
+        end
+      end
+
+    end
+
+    def ==(other)
+      return false unless other.kind_of?(self.class)
+      return false unless self.class.attributes.keys.sort == other.class.attributes.keys.sort
+
+      self.class.attributes.keys.each do |attr|
+        return false unless self.send(attr) == other.send(attr)
+      end
+
+      return true
+    end
+
+    def save!
+      insert_hash = {}
+
+      @@attributes.keys.each do |key|
+        insert_hash[key.to_s] = self.send(key)
+      end
+
+      @@table.create(insert_hash)
+    end
+
+    def delete
+      delete_hash = {}
+      @@primary_key.map{|pk| delete_hash[pk.to_s]=self.send(pk)}
+      @@table.delete(delete_hash)
+    end
+
   end
 end
