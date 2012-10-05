@@ -29,6 +29,10 @@ describe 'Model' do
   end
 
   context 'basic operations' do
+    it 'returns schema' do
+      TimelineModel.schema.should == {:table => 'timeline', :attributes=>{:user_id => 'varchar', :tweet_id => 'int', :author => 'varchar', :body => 'varchar'}, :primary_key => [:user_id, :tweet_id]}
+    end
+
     it 'checks equality of two models' do
       timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
       timeline2 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
@@ -139,6 +143,7 @@ describe 'Model' do
       TimelineModel.find(:all, {:where=>['user_id = ?', 'test_user0']}).size.should == 2
       TimelineModel.find({'user_id' => 'test_user0', 'tweet_id' => 1}).size.should  == 1
     end
+
   end
 
 end

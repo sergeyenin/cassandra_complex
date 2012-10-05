@@ -52,6 +52,12 @@ module CassandraComplex
       @@attributes  = {}
       @@primary_key = []
 
+      def schema
+        attr = {}
+        @@attributes.map{|x,y| attr[x] = y[:type]}
+        {:table => @@table_name, :attributes => attr, :primary_key => @@primary_key}
+      end
+
       def primary_key
         @@primary_key
       end
