@@ -19,7 +19,7 @@ describe 'Model' do
     conn = CassandraComplex::Connection.new('127.0.0.1:9160')
     conn.execute('CREATE KEYSPACE cassandra_complex_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
     CassandraComplex::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_complex_test'})
-    TimelineModel.create_table!
+    TimelineModel.create_table
   end
 
   after :all do
@@ -108,7 +108,7 @@ describe 'Model' do
     it 'just save' do
       timeline = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
 
-      timeline.save!
+      timeline.save
 
       TimelineModel.all.size.should == 1
     end
@@ -117,7 +117,7 @@ describe 'Model' do
   context 'deleting model' do
     before (:each) do
       TimelineModel.truncate
-      TimelineModel.create!({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+      TimelineModel.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
     end
 
     it 'as class method' do
@@ -136,10 +136,10 @@ describe 'Model' do
 
     before (:each) do
       TimelineModel.truncate
-      TimelineModel.create!({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
-      TimelineModel.create!({'user_id' => 'test_user0', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
-      TimelineModel.create!({'user_id' => 'test_user2', 'tweet_id' => 2, 'author' => 'test_author2', 'body' => 'test_body2'})
-      TimelineModel.create!({'user_id' => 'test_user3', 'tweet_id' => 3, 'author' => 'test_author3', 'body' => 'test_body3'})
+      TimelineModel.create({'user_id' => 'test_user0', 'tweet_id' => 0, 'author' => 'test_author0', 'body' => 'test_body0'})
+      TimelineModel.create({'user_id' => 'test_user0', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+      TimelineModel.create({'user_id' => 'test_user2', 'tweet_id' => 2, 'author' => 'test_author2', 'body' => 'test_body2'})
+      TimelineModel.create({'user_id' => 'test_user3', 'tweet_id' => 3, 'author' => 'test_author3', 'body' => 'test_body3'})
     end
 
 

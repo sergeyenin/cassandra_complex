@@ -3,7 +3,7 @@ module CassandraComplex
   # @example Using model
   # class Timeline < CassandraComplex::Model
   #
-  #   set_keyspace 'history'
+  #   table 'timeline'
   #
   #   attribute :user_id, 'varchar'
   #   attribute :tweet_id, 'uuid'
@@ -17,7 +17,7 @@ module CassandraComplex
   # Timeline.create_table
   #
   # t = Timeline.new(:user_id=>'mickey', :tweet_id=>1715, :author=> 'mouse', :body=>"'Hello!'")
-  # t.save!
+  # t.save
   #
   # timelines = Timeline.all('mickey')
   # t = timelines.first
@@ -123,13 +123,13 @@ module CassandraComplex
         @@table.delete(key, hsh, &blck)
       end
 
-      def create!(hsh={})
+      def create(hsh={})
         new_model = self.new(hsh)
-        new_model.save!
+        new_model.save
         new_model
       end
 
-      def create_table!
+      def create_table
         attr = @@attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
         p_key = ''
         p_key = " PRIMARY KEY (#{@@primary_key.map{|x| x.to_s}.join(', ')})"
@@ -183,7 +183,7 @@ module CassandraComplex
     end
 
     #todo: save just columns which are neccessary
-    def save!
+    def save
       insert_hash = {}
 
       @@attributes.keys.each do |key|
