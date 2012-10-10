@@ -46,61 +46,70 @@ module CassandraComplex
     class << self
       attr_accessor :table_name
 
-      @@table       = nil
-      @@table_name  = ''
+      @@table       = Hash.new {|hash, key| hash[key] = nil}
+      @@table_name  = Hash.new {|hash, key| hash[key] = ''}
 
-      @@attributes  = {}
-      @@primary_key = []
+      @@attributes  = Hash.new {|hash, key| hash[key] = {}}
+      @@primary_key = Hash.new {|hash, key| hash[key] = []}
+
+      # Table executing all cql commands.
+      def table_cql
+        @@table[self]
+      end
+
+      # Table name
+      def table_name
+        @@table_name[self]
+      end
+
+      # All attributes within class.
+      def attributes
+        @@attributes[self]
+      end
+
+      def get_primary_key
+        @@primary_key[self]
+      end
 
       def schema
         attr = {}
-        @@attributes.map{|x,y| attr[x] = y[:type]}
-        {:table => @@table_name, :attributes => attr, :primary_key => @@primary_key}
-      end
-
-      def primary_key
-        @@primary_key
+        attributes.each{|x,y| attr[x] = y[:type]}
+        {:table => table_name, :attributes => attr, :primary_key => get_primary_key}
       end
 
       def primary_key(*attr_names)
         attr_names.each do |attr_name|
-          raise WrongModelDefinition, 'Primary key could be choosen just from already introduced attribute.' unless @@attributes.has_key?(attr_name.intern)
-          @@primary_key << attr_name.intern
+          raise WrongModelDefinition, 'Primary key could be choosen just from already introduced attribute.'\
+                                                                       unless attributes.has_key?(attr_name.intern)
+          @@primary_key[self] << attr_name.intern
         end
-      end
-
-      def attributes
-        @@attributes
       end
 
       def attribute(attr_name, attr_type)
         attr_name = attr_name.intern
         raise WrongModelDefinition, 'You can`t redefine already introduced attribute.' if self.instance_methods.include?(name)
 
-        @@attributes[attr_name] = {:type => attr_type}
+        attributes[attr_name] = {:type => attr_type}
         define_method(attr_name) do
-          @@attributes[attr_name][:value]
+          @_attributes[attr_name][:value]
         end
         define_method(:"#{attr_name}=") do |value|
-          @@attributes[attr_name][:value]  = value
-          @@attributes[attr_name][:dirty?] = true
+          @_attributes[attr_name][:value]  = value
+          @_attributes[attr_name][:dirty?] = true
         end
       end
 
-      def table(table_name)
-        @@table_name = table_name.to_s.downcase
-        @@table      = Class.new(CassandraComplex::Table) do
-          set_table_name @@table_name
+      def table(new_table_name)
+        table_name  = new_table_name.to_s.downcase
+        @@table[self]   = Class.new(CassandraComplex::Table) do
+          set_table_name table_name
         end
+        @@table_name[self] = table_name
       end
 
       def count(key=nil, clauses={}, &blck)
         key = nil if key == :all
-        return_value = 0
-
-        return_value = @@table.count(key, clauses, &blck)
-
-        return_value
+        table_cql.count(key, clauses, &blck)
       end
 
       def all(clauses={}, &blck)
@@ -108,19 +117,18 @@ module CassandraComplex
       end
 
       def find(key=nil, clauses={}, &blck)
-        return_value = []
         key = nil if key == :all
-        @@table.find(key, clauses).each do |record|
+        return_value = table_cql.find(key, clauses).map do |record|
           new_instance = self.new(record, {:dirty => false})
-          return_value << new_instance
           blck.call(new_instance) if block_given?
+          new_instance
         end
         return_value
       	end
 
       def delete(key, hsh={}, &blck)
         key = nil if key == :all
-        @@table.delete(key, hsh, &blck)
+        table_cql.delete(key, hsh, &blck)
       end
 
       def create(hsh={})
@@ -130,20 +138,27 @@ module CassandraComplex
       end
 
       def create_table
-        attr = @@attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
+        attrs = attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
         p_key = ''
-        p_key = " PRIMARY KEY (#{@@primary_key.map{|x| x.to_s}.join(', ')})"
+        p_key = " PRIMARY KEY (#{get_primary_key.map{|x| x.to_s}.join(', ')})"
         create_table_command = <<-eos
-          CREATE TABLE @@table_name (
-            #{attr}
+          CREATE TABLE table_name (
+            #{attrs}
             #{p_key}
           );
         eos
-        @@table.execute(create_table_command)
+        table_cql.execute(create_table_command)
+      end
+
+      def drop_table
+        drop_table_command = <<-eos
+          DROP TABLE table_name;
+        eos
+        table_cql.execute(drop_table_command)
       end
 
       def truncate
-        @@table.truncate
+        table_cql.truncate
       end
     end
 
@@ -153,7 +168,7 @@ module CassandraComplex
 
     def dirty?
       return_value = false
-      @@attributes.each_value do |attr_value|
+      @_attributes.each_value do |attr_value|
         return_value = true if attr_value[:dirty?]
       end
       return_value
@@ -161,10 +176,11 @@ module CassandraComplex
 
     #instance` methods
     def initialize(hsh = {}, options={})
+      @_attributes = Hash.new{|hash, key| hash[key] = {}}
       hsh.each_pair do |key, value|
-        if @@attributes.has_key?(key.intern)
-          @@attributes[key.intern][:value] = value
-          @@attributes[key.intern][:dirty?] = options[:dirty].nil? ? true : options[:dirty]
+        if self.class.attributes.has_key?(key.intern)
+          @_attributes[key.intern][:value] = value
+          @_attributes[key.intern][:dirty?] = options[:dirty].nil? ? true : options[:dirty]
         else
           raise WrongModelInitialization, "Can`t initialize Model with attribute - #{key} ,that are not described in Model definition."
         end
@@ -186,27 +202,27 @@ module CassandraComplex
     def save
       insert_hash = {}
 
-      @@attributes.keys.each do |key|
+      @_attributes.keys.each do |key|
         insert_hash[key.to_s] = self.send(key)
       end
 
-      @@table.create(insert_hash)
+      self.class.table_cql.create(insert_hash)
       self.dirty = false
     end
 
     def delete
       delete_hash = {}
-      @@primary_key.map{|pk| delete_hash[pk.to_s]=self.send(pk)}
-      @@table.delete(delete_hash)
+      self.class.get_primary_key.each{|pk| delete_hash[pk.to_s]=self.send(pk)}
+      self.class.table_cql.delete(delete_hash)
       self.dirty = false
     end
 
     private
 
     def dirty=(new_dirty_value, columns = nil)
-      columns ||= @@attributes.keys
-      @@attributes.each_key do |attr_name|
-        @@attributes[attr_name][:dirty?] = new_dirty_value if columns.include?(attr_name)
+      columns ||= @_attributes.keys
+      @_attributes.each_key do |attr_name|
+        @_attributes[attr_name][:dirty?] = new_dirty_value if columns.include?(attr_name)
       end
     end
 

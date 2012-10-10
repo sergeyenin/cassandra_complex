@@ -11,6 +11,16 @@ class TimelineModel < CassandraComplex::Model
   primary_key :user_id, :tweet_id
 end
 
+class Tickets < CassandraComplex::Model
+  table 'tickets'
+
+  attribute :ticket_id, 'int'
+  attribute :owner, 'varchar'
+  attribute :time, 'timestamp'
+
+  primary_key :ticket_id
+end
+
 CassandraComplex::Configuration.logger = Logger.new('/dev/null')
 
 describe 'Model' do
@@ -20,21 +30,25 @@ describe 'Model' do
     conn.execute('CREATE KEYSPACE cassandra_complex_test WITH strategy_class = \'SimpleStrategy\' AND strategy_options:replication_factor = 1;')
     CassandraComplex::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_complex_test'})
     TimelineModel.create_table
+    Tickets.create_table
   end
 
   after :all do
     conn = CassandraComplex::Connection.new('127.0.0.1:9160')
-    conn.execute('DROP TABLE timeline;')
+    TimelineModel.drop_table
+    Tickets.drop_table
     conn.execute('DROP KEYSPACE cassandra_complex;')
   end
 
   context 'basic operations' do
     before :each do
       TimelineModel.truncate
+      Tickets.truncate
     end
 
     it 'returns schema' do
       TimelineModel.schema.should == {:table => 'timeline', :attributes=>{:user_id => 'varchar', :tweet_id => 'int', :author => 'varchar', :body => 'varchar'}, :primary_key => [:user_id, :tweet_id]}
+      Tickets.schema.should == {:table => 'tickets', :attributes=>{:ticket_id => 'int', :owner => 'varchar', :time => 'timestamp'}, :primary_key => [:ticket_id]}
     end
 
     it 'checks equality of two models' do
@@ -42,13 +56,20 @@ describe 'Model' do
       timeline2 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
 
       timeline1.should == timeline2
+
+      timeline3 = TimelineModel.new({'user_id' => 'test_user3', 'tweet_id' => 3, 'author' => 'test_author3', 'body' => 'test_body3'})
+      timeline1.should_not == timeline3
+
+      tickets = Tickets.new({:ticket_id => 1, :owner=> 'Tim Collins', :time => Time.now})
+
+      tickets.should_not == timeline3
     end
 
     it 'implements dirtiness' do
       timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
       timeline1.dirty?.should == true
 
-      timeline1.save!
+      timeline1.save
       timeline1.dirty?.should == false
 
       timeline1 == TimelineModel.all[0]
@@ -87,7 +108,7 @@ describe 'Model' do
     end
 
     it 'creating and saving new model within DB' do
-      timeline_created = TimelineModel.create!({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+      timeline_created = TimelineModel.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
 
       timeline_created.user_id.should == 'test_user1'
       timeline_created.tweet_id.should == 1
