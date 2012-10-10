@@ -111,7 +111,7 @@ module CassandraComplex
         return_value = []
         key = nil if key == :all
         @@table.find(key, clauses).each do |record|
-          new_instance = self.new(record)
+          new_instance = self.new(record, {:dirty => false})
           return_value << new_instance
           blck.call(new_instance) if block_given?
         end
@@ -160,13 +160,13 @@ module CassandraComplex
     end
 
     #instance` methods
-    def initialize(hsh = {})
+    def initialize(hsh = {}, options={})
       hsh.each_pair do |key, value|
-        if @@attributes.has_key?(key)
-          raise WrongModelInitialization, "Can`t initialize Model with attribute - #{key} ,that are not described in Model definition."
-        else
+        if @@attributes.has_key?(key.intern)
           @@attributes[key.intern][:value] = value
-          @@attributes[key.intern][:dirty?] = true
+          @@attributes[key.intern][:dirty?] = options[:dirty].nil? ? true : options[:dirty]
+        else
+          raise WrongModelInitialization, "Can`t initialize Model with attribute - #{key} ,that are not described in Model definition."
         end
       end
     end
@@ -191,12 +191,14 @@ module CassandraComplex
       end
 
       @@table.create(insert_hash)
+      self.dirty = false
     end
 
     def delete
       delete_hash = {}
       @@primary_key.map{|pk| delete_hash[pk.to_s]=self.send(pk)}
       @@table.delete(delete_hash)
+      self.dirty = false
     end
 
     private
@@ -204,7 +206,7 @@ module CassandraComplex
     def dirty=(new_dirty_value, columns = nil)
       columns ||= @@attributes.keys
       @@attributes.each_key do |attr_name|
-        @@attributes[attr_name][:dirty?] = new_dirty_value
+        @@attributes[attr_name][:dirty?] = new_dirty_value if columns.include?(attr_name)
       end
     end
 
