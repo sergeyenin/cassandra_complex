@@ -45,7 +45,7 @@ describe 'Model' do
     end
 
     it 'implements dirtiness' do
-      timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'}
+      timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
       timeline1.dirty?.should == true
 
       timeline1.save!

@@ -153,7 +153,7 @@ module CassandraComplex
 
     def dirty?
       return_value = false
-      @@attributes.each_value |attr_value|
+      @@attributes.each_value do |attr_value|
         return_value = true if attr_value[:dirty?]
       end
       return_value
@@ -169,7 +169,6 @@ module CassandraComplex
           @@attributes[key.intern][:dirty?] = true
         end
       end
-
     end
 
     def ==(other)
@@ -192,19 +191,17 @@ module CassandraComplex
       end
 
       @@table.create(insert_hash)
-      self.dirty? = false, @@attributes.select{|attr_name, attr_value| attr_value[:dirty?]}.keys
     end
 
     def delete
       delete_hash = {}
       @@primary_key.map{|pk| delete_hash[pk.to_s]=self.send(pk)}
       @@table.delete(delete_hash)
-      self.dirty? = false
     end
 
     private
 
-    def dirty?=(new_dirty_value, columns = nil)
+    def dirty=(new_dirty_value, columns = nil)
       columns ||= @@attributes.keys
       @@attributes.each_key do |attr_name|
         @@attributes[attr_name][:dirty?] = new_dirty_value
