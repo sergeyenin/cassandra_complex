@@ -6,7 +6,7 @@ end
 
 CassandraComplex::Configuration.logger = Logger.new(STDOUT)
 
-describe "Table" do
+describe 'Table' do
 
   before :all do
     conn = CassandraComplex::Connection.new('127.0.0.1:9160')
@@ -344,9 +344,16 @@ describe "Table" do
       TimelineTable.all.size.should == 0
     end
 
+    it 'hash where' do
+      TimelineTable.delete({'user_id' => 'test_user0', 'tweet_id' => 0})
+      TimelineTable.delete({'user_id' => 'test_user1', 'tweet_id' => 1})
+      TimelineTable.all.size.should == 0
+    end
+
     it 'supports bind' do
       TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user0', '0']})
       TimelineTable.delete(nil, {:where => ['user_id = ? and tweet_id = ?', 'test_user1', '1']})
+      TimelineTable.all.size.should == 0
     end
 
     it 'single key with options' do
