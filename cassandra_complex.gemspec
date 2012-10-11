@@ -5,12 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = "cassandra_complex"
-  s.version = "0.3.8"
+  s.version = ""
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-09-26"
-  s.description = "Raw wrapper for Cassandra CQL3 operations."
+  s.date = "2012-10-11"
+  s.description = "Wrapper for Cassandra CQL3 operations."
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -33,16 +33,17 @@ Gem::Specification.new do |s|
     "lib/cassandra_complex/model.rb",
     "lib/cassandra_complex/row.rb",
     "lib/cassandra_complex/table.rb",
+    "spec/cassandra_complex/model_spec.rb",
     "spec/cassandra_complex/table_spec.rb",
     "spec/spec_helper.rb",
     "test/helper.rb",
     "test/test_cassandra_model_cql.rb"
   ]
   s.homepage = "http://github.com/sergeyenin/cassandra_complex"
-  s.licenses = ["MIT"]
+  s.licenses = ["Apache License 2"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.24"
-  s.summary = "Raw wrapper for Cassandra CQL3 operations."
+  s.summary = "Wrapper for Cassandra CQL3 operations."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

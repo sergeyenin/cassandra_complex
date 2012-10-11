@@ -29,7 +29,8 @@ module CassandraComplex
 	raise MissingConfiguration if Configuration.host.nil? || Configuration.default_keyspace.nil?
         @@connections[kyspc] = CassandraComplex::Connection.new(Configuration.host, {:keyspace=>kyspc || Configuration.default_keyspace || 'system'})\
                                  unless ( @@connections[kyspc] && @@connections[kyspc].conn.active?)
-        Configuration.logger.info "Connected to: #{Configuration.host}:#{Configuration.default_keyspace}"
+        Configuration.logger.info "Connected to: #{Configuration.host}:#{Configuration.default_keyspace}"\
+                                                                         if Configuration.logger.kind_of?(Logger)
         @@connections[kyspc]
       end
     end
@@ -43,7 +44,8 @@ module CassandraComplex
     # @return [CassandraComplex::Connection] new instance
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
-      Configuration.logger.info "Connecting to #{hosts.inspect} with params #{options.inspect}"
+      Configuration.logger.info "Connecting to #{hosts.inspect} with params #{options.inspect}"\
+                                                                  if Configuration.logger.kind_of?(Logger)
       @conn = CassandraCQL::Database.new(hosts, options.merge({:cql_version=>'3.0.0'}))
       @mutex = Mutex.new
     end
@@ -64,7 +66,8 @@ module CassandraComplex
               if bind.size > 0
                 cql = CassandraCQL::Statement.sanitize(cql, bind)
               end
-              Configuration.logger.info "Going to execute CQL: '#{cql}'"
+              Configuration.logger.info "Going to execute CQL: '#{cql}'"\
+                                                              if Configuration.logger.kind_of?(Logger)
               new_rows = add_rows(@conn.execute(cql), &blck)
               row_set << new_rows if new_rows
             end
