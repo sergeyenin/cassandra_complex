@@ -14,11 +14,11 @@ end
 class Tickets < CassandraComplex::Model
   table 'tickets'
 
-  attribute :ticket_id, 'int'
+  attribute :user_id, 'int'
   attribute :owner, 'varchar'
   attribute :time, 'timestamp'
 
-  primary_key :ticket_id
+  primary_key :user_id
 end
 
 CassandraComplex::Configuration.logger = Logger.new('/dev/null')
@@ -48,7 +48,7 @@ describe 'Model' do
 
     it 'returns schema' do
       TimelineModel.schema.should == {:table => 'timeline', :attributes=>{:user_id => 'varchar', :tweet_id => 'int', :author => 'varchar', :body => 'varchar'}, :primary_key => [:user_id, :tweet_id]}
-      Tickets.schema.should == {:table => 'tickets', :attributes=>{:ticket_id => 'int', :owner => 'varchar', :time => 'timestamp'}, :primary_key => [:ticket_id]}
+      Tickets.schema.should == {:table => 'tickets', :attributes=>{:user_id => 'int', :owner => 'varchar', :time => 'timestamp'}, :primary_key => [:user_id]}
     end
 
     it 'checks equality of two models' do
@@ -60,7 +60,7 @@ describe 'Model' do
       timeline3 = TimelineModel.new({'user_id' => 'test_user3', 'tweet_id' => 3, 'author' => 'test_author3', 'body' => 'test_body3'})
       timeline1.should_not == timeline3
 
-      tickets = Tickets.new({:ticket_id => 1, :owner=> 'Tim Collins', :time => Time.now})
+      tickets = Tickets.new({:user_id => 10, :owner=> 'Tim Collins', :time => Time.now})
 
       tickets.should_not == timeline3
     end
@@ -82,29 +82,35 @@ describe 'Model' do
   context 'creating new model' do
     before (:each) do
       TimelineModel.truncate
+      Tickets.truncate
     end
 
     it 'with Hash' do
-      timeline = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+      timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
 
-      timeline.user_id.should == 'test_user1'
-      timeline.tweet_id.should == 1
-      timeline.author.should == 'test_author1'
-      timeline.body.should == 'test_body1'
+      timeline1.user_id.should  == 'test_user1'
+      timeline1.tweet_id.should == 1
+      timeline1.author.should   == 'test_author1'
+      timeline1.body.should     == 'test_body1'
+
+      ticket1 = Tickets.new({:user_id => 10, :owner=> 'Tim Collins', :time => Time.now})
+
+      ticket1.user_id.should == 10
+      ticket1.owner.should   == 'Tim Collins'
     end
 
     it 'with assigment' do
       timeline = TimelineModel.new
 
-      timeline.user_id  = 'test_user1'
-      timeline.tweet_id = 1
-      timeline.author   = 'test_author1'
-      timeline.body     = 'test_body1'
+      timeline.user_id  = 'test_user2'
+      timeline.tweet_id = 2
+      timeline.author   = 'test_author2'
+      timeline.body     = 'test_body2'
 
-      timeline.user_id.should == 'test_user1'
-      timeline.tweet_id.should == 1
-      timeline.author.should == 'test_author1'
-      timeline.body.should == 'test_body1'
+      timeline.user_id.should == 'test_user2'
+      timeline.tweet_id.should == 2
+      timeline.author.should == 'test_author2'
+      timeline.body.should == 'test_body2'
     end
 
     it 'creating and saving new model within DB' do
