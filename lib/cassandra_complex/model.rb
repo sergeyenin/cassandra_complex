@@ -1,5 +1,5 @@
 module CassandraComplex
-  # ActiveRecord like sugared model
+  # A little bit sugared model.
   # @example Using model
   # class Timeline < CassandraComplex::Model
   #
@@ -126,9 +126,9 @@ module CassandraComplex
         return_value
       	end
 
-      def delete(key, hsh={}, &blck)
+      def delete(key, clauses={}, &blck)
         key = nil if key == :all
-        table_cql.delete(key, hsh, &blck)
+        table_cql.delete(key, clauses, &blck)
       end
 
       def create(hsh={})
@@ -163,7 +163,7 @@ module CassandraComplex
     end
 
     #
-    #instance
+    # instance methods
     #
 
     def dirty?
@@ -174,7 +174,6 @@ module CassandraComplex
       return_value
     end
 
-    #instance` methods
     def initialize(hsh = {}, options={})
       @_attributes = Hash.new{|hash, key| hash[key] = {}}
       hsh.each_pair do |key, value|
@@ -198,12 +197,11 @@ module CassandraComplex
       return true
     end
 
-    #todo: save just columns which are neccessary
     def save
       insert_hash = {}
 
       @_attributes.keys.each do |key|
-        insert_hash[key.to_s] = self.send(key)
+        insert_hash[key.to_s] = self.send(key) if self.class.get_primary_key.include?(key) || @_attributes[key.intern][:dirty?]
       end
 
       self.class.table_cql.create(insert_hash)

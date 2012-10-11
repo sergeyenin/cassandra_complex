@@ -20,9 +20,9 @@ Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "cassandra_complex"
   gem.homepage = "http://github.com/sergeyenin/cassandra_complex"
-  gem.license = "MIT"
-  gem.summary = "Raw wrapper for Cassandra CQL3 operations."
-  gem.description = "Raw wrapper for Cassandra CQL3 operations."
+  gem.license = "Apache License 2"
+  gem.summary = "Wrapper for Cassandra CQL3 operations."
+  gem.description = "Wrapper for Cassandra CQL3 operations."
   gem.email = "sergeyenin@gmail.com"
   gem.authors = ["Sergey Enin"]
   # dependencies defined in Gemfile

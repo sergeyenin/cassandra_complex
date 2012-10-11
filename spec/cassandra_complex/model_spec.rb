@@ -21,7 +21,7 @@ class Tickets < CassandraComplex::Model
   primary_key :user_id
 end
 
-CassandraComplex::Configuration.logger = Logger.new('/dev/null')
+#CassandraComplex::Configuration.logger = Logger.new('/dev/null')
 
 describe 'Model' do
 
@@ -76,6 +76,16 @@ describe 'Model' do
       timeline1.dirty?.should == false
       timeline1.author = 'test_author42'
       timeline1.dirty?.should == true
+      timeline1.save
+
+      timelines = TimelineModel.all
+      timelines.size.should == 1
+      timeline1 = timelines[0]
+
+      timeline1.user_id.should  == 'test_user1'
+      timeline1.tweet_id.should == 1
+      timeline1.author.should   == 'test_author42'
+      timeline1.body.should     == 'test_body1'
     end
   end
 
