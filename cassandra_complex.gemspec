@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "cassandra_complex"
-  s.version = ""
+  s.version = "0.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergey Enin"]
-  s.date = "2012-10-11"
+  s.date = "2012-11-28"
   s.description = "Wrapper for Cassandra CQL3 operations."
   s.email = "sergeyenin@gmail.com"
   s.extra_rdoc_files = [
@@ -51,7 +51,7 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<redcarpet>, [">= 0"])
       s.add_runtime_dependency(%q<yard>, [">= 0"])
-      s.add_runtime_dependency(%q<cassandra-cql>, [">= 0"])
+      s.add_runtime_dependency(%q<cassandra-cql>, ["= 1.1.3"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, ["~> 1.1.0"])
@@ -59,7 +59,7 @@ Gem::Specification.new do |s|
     else
       s.add_dependency(%q<redcarpet>, [">= 0"])
       s.add_dependency(%q<yard>, [">= 0"])
-      s.add_dependency(%q<cassandra-cql>, [">= 0"])
+      s.add_dependency(%q<cassandra-cql>, ["= 1.1.3"])
       s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, ["~> 1.1.0"])
@@ -68,7 +68,7 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<redcarpet>, [">= 0"])
     s.add_dependency(%q<yard>, [">= 0"])
-    s.add_dependency(%q<cassandra-cql>, [">= 0"])
+    s.add_dependency(%q<cassandra-cql>, ["= 1.1.3"])
     s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, ["~> 1.1.0"])
