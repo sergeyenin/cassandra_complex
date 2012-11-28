@@ -16,4 +16,4 @@ end
 gem 'redcarpet'
 gem 'yard'
 
-gem 'cassandra-cql', '1.1.3'
+gem 'cassandra-cql', '1.1.4'
