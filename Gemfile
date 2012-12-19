@@ -10,6 +10,7 @@ group :development do
 end
 
 group :test do
+  gem 'progress_bar'
   gem 'rspec'
 end
 
