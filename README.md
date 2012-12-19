@@ -1,23 +1,57 @@
-# cassandra\_model\_cql
+# cassandra\_complex
 
-Helper - Wrapper for Cassandra CQL operations.
+Basic model - wrapper for CQL(Cassandra Query Language) operations.
+
+## Extern interfaces provided by CassandraModelCql
+
+### Table
+
+Class Table implements wrapping of CQL3 operations.
+
+### Model
+
+Class Model implements basic model.
 
 ## Example of usage
 
-    class Timeline < CassandraModelCql::Table
-      set_keyspace 'history'
+### Basic configuring
+
+    CassandraComplex::Configuration.read({'host'=>'127.0.0.1:9160', 'default_keyspace'=>'cassandra_complex_test'})
+    CassandraComplex::Configuration.logger = Logger.new(STDOUT)
+
+### Using interface provided by CassandraComplex::Table
+
+    class Timeline < CassandraComplex::Table
+      set_table_name 'timeline'
     end
-    # each row is being processed, while it is fetched from Cassandra
-    Timeline.all('some_primary_key') do
-      row['body'] = 'Another body!'
-      row.save
+    Timeline.create({'user_id' => 'test_user0', 'tweet_id' => 16, 'author' => 'test_author0', 'body' => 'test_body0'})
+    Timeline.all
+    Timeline.delete('test_user0')
+    Timeline.truncate
+
+### Using Model interface
+
+    class TimelineModel < CassandraComplex::Model
+      table 'timeline'
+      attribute :user_id,  'varchar'
+      attribute :tweet_id, 'int'
+      attribute :author,   'varchar'
+      attribute :body,     'varchar'
+      primary_key :user_id, :tweet_id
     end
+    Timeline.create_table
+    timeline1 = TimelineModel.new({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+    timeline1.author = 'test_author42'
+    timeline1.dirty? == true
+    timeline1.save
+    timeline1.dirty? == false
+    Timeline.drop_table
 
 ## Features
 
 * Wrapping all CQL3 operations, no need to write any CQL3 code.
 
-* In case of any error Table` child provide .last_error and last_error_command.
+* Model provides basic model with dirtiness.
 
 * All selects, such as .all, .find, count returns arrays of pure hashes.
 
@@ -28,9 +62,3 @@ Helper - Wrapper for Cassandra CQL operations.
 * You can execute any operation within context of Table.with_keyspace.
 
 * All connections operations to each keyspace is protected with mutex.
-
-## Extern interfaces provided by CassandraModelCql
-
-### Table
-
-Class Table implement wrapping of CQL3 operations.
