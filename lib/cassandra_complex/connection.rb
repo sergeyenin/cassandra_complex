@@ -7,8 +7,8 @@ module CassandraComplex
   # @!attribute [r] keyspace
   #   @return [String] The keyspace is being connected to
   # @example Usage of Connection
-  #   connection = Connection.new('127.0.0.1:9160')
-  #   row_set    = connection.execute("select * timeline")
+  #   connection = Connection.new('127.0.0.1:9160', {:keyspace=>'cassandra_complex_test'})
+  #   row_set    = connection.execute("select * from timeline")
   #   row_set.each |row|
   #     puts row['user_id']
   #   end
@@ -40,7 +40,7 @@ module CassandraComplex
     #
     # @param [Array, String] hosts list of hosts, a single host, to connect to
     # @param [Hash] options list of options
-    # @option options [String] keyspace initial keyspace to connect; defaults to 'system'
+    # @option options [String] keyspace initial keyspace to connect, default is 'system'
     # @return [CassandraComplex::Connection] new instance
     def initialize(hosts, options = {})
       @keyspace = options[:keyspace] || 'system'
@@ -52,23 +52,24 @@ module CassandraComplex
 
     # Execute CQL3 query with Thread safety.
     #
-    # @param [Array, String] cql_string string with cql3 commands
+    # @param [Array<String>, String] cql_string string with cql3 commands
     # @param [Boolean] multi_commands if the cql_strings should be divided into separate commands
     # @param [CassandraComplex::Table] table the table with describing schema
-    # @param [Array] binds for cql string
+    # @param [Array] bind bind for cql string
+    # @yieldparam [Proc] blck custom code to be executed on each new row adding
     # @return [Array] row set
     def execute(cql_string, multi_commands = true, table=nil, bind=[], &blck)
       row_set = []
       @mutex.synchronize {
         begin
-          prepare_cql_statement(cql_string, multi_commands).each do |cql|
+          join_multi_commands(cql_string, multi_commands).each do |cql|
             if !(cql.strip.empty?)
               if bind.size > 0
                 cql = CassandraCQL::Statement.sanitize(cql, bind)
               end
               Configuration.logger.info "Going to execute CQL: '#{cql}'"\
                                                               if Configuration.logger.kind_of?(Logger)
-              new_rows = add_rows(@conn.execute(cql), &blck)
+              new_rows = process_thrift_rows(@conn.execute(cql), &blck)
               row_set << new_rows if new_rows
             end
           end
@@ -99,7 +100,8 @@ module CassandraComplex
       }
     end
 
-    # Execute CQL3 commands within batch, @see execute
+    # Execute CQL3 commands within batch
+    # (see #execute)
     #
     # @param [String, Array] cql_commands CQL3 commands to be executed within batch
     # @param [Hash] options Consistency options of batch command
@@ -117,7 +119,7 @@ module CassandraComplex
       execute(command, false)
     end
 
-    # Return key alias(primary key) for given table
+    # Return key alias(first part of primary key) for given table
     #
     # @param [String] table_name Table name of given table
     # @return [String] primary key for given table
@@ -127,7 +129,11 @@ module CassandraComplex
 
     private
 
-    def add_rows(rows, &blck)
+    # Process thrift rows
+    #
+    # @param [Array] rows thrift rows
+    # @yieldparam [Proc] blck custom code to be executed on each new row adding
+    def process_thrift_rows(rows, &blck)
       return unless rows
       return_value = []
       rows.fetch do |thrift_row|
@@ -143,11 +149,11 @@ module CassandraComplex
       return_value
     end
 
-    # Prepare cql statement
+    # Prepare cql statement before executing
     #
     # @param [String] cql_statement CQL3 statemenet that need to be prepared
     # @param [Boolean] multi_commands If cql_statement consist multi commands
-    def prepare_cql_statement(cql_statement, multi_commands)
+    def join_multi_commands(cql_statement, multi_commands)
       return_value = cql_statement
       if multi_commands
         return_value  = return_value.gsub(/\n/, ' ')

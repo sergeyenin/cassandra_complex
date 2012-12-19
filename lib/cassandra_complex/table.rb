@@ -1,8 +1,13 @@
 module CassandraComplex
   # Class Table which wraps CQL3 operations
   #
+  # @!attribute [rw] keyspace
+  #   @return [String] The keyspace is being connected to
+  # @!attribute [rw] configuration
+  #   @return [String] The configuration of the connection
   # @example Selecting all rows with given primary
   #   class Timeline < CassandraComplex::Table
+  #     set_table_name 'timeline'
   #   end
   #
   #   rows = Timeline.all('some_primary_key') do |row|
@@ -18,50 +23,88 @@ module CassandraComplex
     private_class_method :new
 
     class << self
+
       attr_accessor :keyspace
       attr_accessor :configuration
 
+      # Specify keyspace for particular table
+      #
+      # @param [String] kyspc keyspace
       def set_keyspace(kyspc)
         self.keyspace = kyspc
       end
 
+      # Return connection for given keyspace(or default keyspace if no keyspace is given)
+      #
+      # @param [String] kyspc keyspace for which return the connection
+      # @return [CassandraComplex::Connection] new instance of Connection
       def connection(kyspc=nil)
         CassandraComplex::Connection.connection(kyspc || self.keyspace)
       end
 
+      # Execute code within specific keyspace
+      #
+      # @param [String] kyspc keyspace in which code should be executed
+      # @yieldparam [Proc] blck custom code to be executed within keyspace
       def with_keyspace(kyspc, &blck)
         connection.with_keyspace(kyspc, &blck)
       end
 
+      # Set table name for particular table
+      #
+      # @param[String] tbl table name
       def set_table_name(tbl)
         @tbl_name = tbl
       end
 
+      # Return table name
+      #
+      # @return [String] table name
       def table_name
         @tbl_name || self.name.downcase
       end
 
+      # Return first part of primary key
+      #
+      # @return [String] first part of primary key
       def id
         @id ||= connection.key_alias(table_name)
         @id
       end
 
+      # Return if table is empty
+      #
+      # @return [Boolean] if table is empty
       def empty?
         all.empty?
       end
 
+      # Truncate table
+      # @return [Boolean] true
       def truncate
         command = "truncate #{table_name};"
         rs = connection.execute(command, true, self)
         true
       end
 
-      #raw query execution
+      # Raw query execution
+      # @param [String] cql_query_string
+      # @yieldparam [Proc] blck custom code to be executed within keyspace
+      # @return [Array<Hash>] result set as array of hashes
       def execute(cql_query_string, &blck)
         rs = connection.execute(cql_query_string, true, self, [], &blck)
         rs
       end
 
+      # Return result set for given primary key
+      # @see .build_select_clause
+      #
+      # @param [String, Array<String>, Hash] key key for where clause
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @return [Array<Hash>] array of hashes
       def all(key=nil, clauses={}, &blck)
         key = nil if key == :all
 
@@ -90,6 +133,15 @@ module CassandraComplex
 
       alias find all
 
+      # Return count of result set for given primary key
+      # @see .build_select_clause
+      #
+      # @param [String, Array<String>, Hash] key key for where clause
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @return [Array<Hash>] result as as array of hashes
       def count(key=nil, clauses={}, &blck)
         key = nil if key == :all
         return_value = nil
@@ -107,6 +159,10 @@ module CassandraComplex
         return_value
       end
 
+      # Insert record
+      # @param [Hash] clauses hash of fields, which need to be inserted
+      # @param [Hash] options create options, such as consistency
+      # @return [Boolean] always true
       def create(clauses={}, options={})
         return false if clauses.empty?
 
@@ -125,8 +181,16 @@ module CassandraComplex
         return true
       end
 
+
       alias update create
 
+      # Delete record(s)
+      # @param [String, Array<String>, Hash] key key for where clause
+      # @param [Hash] options options for delete
+      # @option options [String] timestamp timestamp of operation
+      # @option options [Array<String>] columns columns which should be deleted
+      # @option options [Array, String] where where options for delete operation
+      # @return [Boolean] always true
       def delete(key=nil,options={})
         return false unless (key || options.has_key?(:where))
 
@@ -151,9 +215,17 @@ module CassandraComplex
 
     protected
 
+      # Build select clause from clauses hash
+      # @see .build_where_clause
+      #
+      # @param [String, Array<String>, Hash] key key for where clause
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @return [String] CQL command
       def build_select_clause(key=nil, clauses={})
         where_clause = build_where_clause(key, clauses)
-
         order_clause = ''
         limit_clause = ''
         if !clauses.empty?
@@ -164,6 +236,12 @@ module CassandraComplex
         command
       end
 
+      # Build where clause from clauses hash
+      #
+      # @param [String, Array<String>, Hash] key key for where clause
+      # @param [Hash] clauses where clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @return [String] where part of CQL command
       def build_where_clause(key, clauses)
         where_clause = ''
         if clauses[:where].kind_of?(Array)

@@ -1,5 +1,9 @@
 module CassandraComplex
   # A little bit sugared model.
+  #
+  # @!attribute [rw] table_name
+  #   @return [String] Table name
+  #
   # @example Using model
   # class Timeline < CassandraComplex::Model
   #
@@ -52,31 +56,46 @@ module CassandraComplex
       @@attributes  = Hash.new {|hash, key| hash[key] = {}}
       @@primary_key = Hash.new {|hash, key| hash[key] = []}
 
-      # Table executing all cql commands.
+      # Returns table executing all cql commands
+      #
+      # @return [Table] CassandraComplex::Table
       def table_cql
         @@table[self]
       end
 
-      # Table name
+      # Returns table name
+      #
+      # @return [String] Name of the table
       def table_name
         @@table_name[self]
       end
 
-      # All attributes within class.
+      # Returns all attributes within class
+      #
+      # @return [Hash] attributes of current Model
       def attributes
         @@attributes[self]
       end
 
+      # Returns primary key for current Model
+      #
+      # @return [Array<String>] primary key for current Model
       def get_primary_key
         @@primary_key[self]
       end
 
+      # Returns schema for current Model
+      #
+      # @return [Hash] schema for current model
       def schema
         attr = {}
         attributes.each{|x,y| attr[x] = y[:type]}
         {:table => table_name, :attributes => attr, :primary_key => get_primary_key}
       end
 
+      # Set primary key(s) for current Model
+      #
+      # @param [Array<Symbol>] attr_names Primary key(s)
       def primary_key(*attr_names)
         attr_names.each do |attr_name|
           raise WrongModelDefinition, 'Primary key could be choosen just from already introduced attribute.'\
@@ -85,6 +104,12 @@ module CassandraComplex
         end
       end
 
+      # Introduce attribute for the Model.
+      # Valid attribute`s types: 'blog', 'ascii', 'text'/'varchar', 'varint', 'int', 'bigint', 'uuid', 'timestamp', 'boolean',
+      # 'float', 'double', 'decimal', 'counter'.
+      #
+      # @param [Symbol] attr_name Attribute`s name
+      # @param [String] attr_type Attribute`s type
       def attribute(attr_name, attr_type)
         attr_name = attr_name.intern
         raise WrongModelDefinition, 'You can`t redefine already introduced attribute.' if self.instance_methods.include?(name)
@@ -99,6 +124,9 @@ module CassandraComplex
         end
       end
 
+      # Set table name for current Model
+      #
+      # @param [String] new_table_name
       def table(new_table_name)
         table_name  = new_table_name.to_s.downcase
         @@table[self]   = Class.new(CassandraComplex::Table) do
@@ -107,15 +135,41 @@ module CassandraComplex
         @@table_name[self] = table_name
       end
 
+      # Return count of result set for given primary key
+      #
+      # @param [String, Array<String>, Hash] key
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @yieldparam [Proc] blck custom code
+      # @return [Array<Hash>] array of hashes
       def count(key=nil, clauses={}, &blck)
         key = nil if key == :all
         table_cql.count(key, clauses, &blck)
       end
 
+      # Return 'all' result set
+      #
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @yieldparam [Proc] blck custom code
+      # @return [Array<Hash>] array of hashes
       def all(clauses={}, &blck)
         find(:all, clauses, &blck)
       end
 
+      # Return result set for given primary key
+      #
+      # @param [String, Array<String>, Hash] key
+      # @param [Hash] clauses select clauses
+      # @option clauses [String, Array<String>] where where clause
+      # @option clauses [String] order order clause
+      # @option clauses [String] limit limit clause
+      # @yieldparam [Proc] blck custom code
+      # @return [Array<Hash>] array of hashes
       def find(key=nil, clauses={}, &blck)
         key = nil if key == :all
         return_value = table_cql.find(key, clauses).map do |record|
@@ -124,19 +178,32 @@ module CassandraComplex
           new_instance
         end
         return_value
-      	end
+      end
 
+      # Delete record(s)
+      #
+      # @param [String, Array<String>, Hash] key
+      # @param [Hash] clauses
+      # @option clauses [String] timestamp timestamp of operation
+      # @option clauses [Array<String>] columns columns which should be deleted
+      # @option clauses [Array, String] where where options for delete operation
+      # @return [Boolean] always true
       def delete(key, clauses={}, &blck)
         key = nil if key == :all
         table_cql.delete(key, clauses, &blck)
       end
 
+      # Create record from hash
+      #
+      # @param [Hash] hsh attributes for new record
+      # @return [Model] created model
       def create(hsh={})
         new_model = self.new(hsh)
         new_model.save
         new_model
       end
 
+      # Create table for model within Cassandra
       def create_table
         attrs = attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
         p_key = ''
@@ -150,6 +217,7 @@ module CassandraComplex
         table_cql.execute(create_table_command)
       end
 
+      # Drop table for model within Cassandra
       def drop_table
         drop_table_command = <<-eos
           DROP TABLE table_name;
@@ -157,15 +225,15 @@ module CassandraComplex
         table_cql.execute(drop_table_command)
       end
 
+      # Truncate table within Cassandra
       def truncate
         table_cql.truncate
       end
     end
 
+    # Returns if model is dirty(some field were changed but model still not saved)
     #
-    # instance methods
-    #
-
+    # @return [Boolean] is model dirty
     def dirty?
       return_value = false
       @_attributes.each_value do |attr_value|
@@ -174,6 +242,12 @@ module CassandraComplex
       return_value
     end
 
+    # Initialize model with hash due to options
+    #
+    # @param [Hash] hsh initialization attributes
+    # @param [Hash] options initalization options
+    # @option options [Bolean] :dirty dirtiness of initialized model
+    # @raise [WrongModelInitialization] raised if passed previously not described attribute
     def initialize(hsh = {}, options={})
       @_attributes = Hash.new{|hash, key| hash[key] = {}}
       hsh.each_pair do |key, value|
@@ -186,6 +260,10 @@ module CassandraComplex
       end
     end
 
+    # Comparator for current and other model
+    #
+    # @param [Model] other model to compare with
+    # @return [Boolean] true if attrbitues of models are equal and each attribute of other model equal to proper attribute of current model, false otherwise
     def ==(other)
       return false unless other.kind_of?(self.class)
       return false unless self.class.attributes.keys.sort == other.class.attributes.keys.sort
@@ -197,6 +275,7 @@ module CassandraComplex
       return true
     end
 
+    # Save the Model within Cassandra
     def save
       insert_hash = {}
 
@@ -208,6 +287,7 @@ module CassandraComplex
       self.dirty = false
     end
 
+    # Delete the Model within Cassandra
     def delete
       delete_hash = {}
       self.class.get_primary_key.each{|pk| delete_hash[pk.to_s]=self.send(pk)}
@@ -217,6 +297,7 @@ module CassandraComplex
 
     private
 
+    # Set dirtiness for the whole Model
     def dirty=(new_dirty_value, columns = nil)
       columns ||= @_attributes.keys
       @_attributes.each_key do |attr_name|

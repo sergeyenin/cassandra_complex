@@ -6,26 +6,31 @@ module CassandraComplex
   class MissingConfiguration < ConfigurationError
   end
 
-  # Your yaml configuration file should looks like:
+  # Configuration class to specify basic settings,
+  # such as host, default keyspace and logger.
   #
-  # production:
-  #   host: '127.0.0.1:9160', example.com:9160'
-  #   default_keyspace: 'my_keyspace_production'
+  # Your yaml configuration file should looks like:
+  #   host: '127.0.0.1:9160, example.com:9160'
+  #   default_keyspace: 'keyspace_production'
+  #
+  # @!attribute [r] host
+  #   @return [String] The host is being connected to
+  # @!attribute [r] default_keyspace
+  #   @return [String] The keyspace is being used within connection by default
+  # @!attribute [rw] logger
+  #   @return [String] The logger(kind_of? Logger) is being used by default
   class Configuration
 
     class << self
       attr_reader :host
       attr_reader :default_keyspace
 
-      attr_reader :logger
+      attr_accessor :logger
 
       # Load yaml source
       #
-      # === Parameters
-      # something(IO|String|Hash):: File path, IO, raw YAML string, or a pre-loaded Hash
-      #
-      # === Returns
-      # (Boolean|Hash):: Loaded yaml file or false if a RuntimeError occurred while loading
+      # @param [IO, String, Hash] something file path, IO, raw YAML string, or a pre-loaded Hash
+      # @return [Boolean, Hash] loaded yaml file or false if a RuntimeError occurred while loading
       def read(something)
         return_value = false
 
@@ -47,10 +52,6 @@ module CassandraComplex
         @logger = Logger.new('/dev/null')
 
         return_value
-      end
-
-      def logger=(new_logger)
-        @logger = new_logger
       end
 
     end
