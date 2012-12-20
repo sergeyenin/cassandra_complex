@@ -21,8 +21,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "cassandra_complex"
   gem.homepage = "http://github.com/sergeyenin/cassandra_complex"
   gem.license = "Apache License 2"
-  gem.summary = "Wrapper for Cassandra CQL3 operations."
-  gem.description = "Wrapper for Cassandra CQL3 operations."
+  gem.summary = "Basic model - wrapper for CQL(Cassandra Query Language) operations."
+  gem.description = "Basic model - wrapper for CQL(Cassandra Query Language) operations."
   gem.email = "sergeyenin@gmail.com"
   gem.authors = ["Sergey Enin"]
   # dependencies defined in Gemfile

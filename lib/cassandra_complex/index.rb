@@ -1,5 +1,6 @@
 module CassandraComplex
   # A composite index for table
+  # not yet implemented
   # @example
   #   class Timeline < CassandraComplex::Model
   #
