@@ -25,6 +25,7 @@ Jeweler::Tasks.new do |gem|
   gem.description = "Basic model - wrapper for CQL(Cassandra Query Language) operations."
   gem.email = "sergeyenin@gmail.com"
   gem.authors = ["Sergey Enin"]
+  gem.version = File.exist?('VERSION') ? File.read('VERSION') : ""
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
