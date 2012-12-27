@@ -19,6 +19,8 @@ class Tickets < CassandraComplex::Model
   attribute :time, 'timestamp'
 
   primary_key :user_id
+
+  secondary_index :owner
 end
 
 #CassandraComplex::Configuration.logger = Logger.new('/dev/null')
@@ -48,7 +50,7 @@ describe 'Model' do
 
     it 'returns schema' do
       TimelineModel.schema.should == {:table => 'timeline', :attributes=>{:user_id => 'varchar', :tweet_id => 'int', :author => 'varchar', :body => 'varchar'}, :primary_key => [:user_id, :tweet_id]}
-      Tickets.schema.should == {:table => 'tickets', :attributes=>{:user_id => 'int', :owner => 'varchar', :time => 'timestamp'}, :primary_key => [:user_id]}
+      Tickets.schema.should == {:table => 'tickets', :attributes=>{:user_id => 'int', :owner => 'varchar', :time => 'timestamp'}, :primary_key => [:user_id], :secondary_index => {'tickets_owner_idx'=>:owner}}
     end
 
     it 'checks equality of two models' do

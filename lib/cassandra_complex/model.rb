@@ -55,6 +55,7 @@ module CassandraComplex
 
       @@attributes  = Hash.new {|hash, key| hash[key] = {}}
       @@primary_key = Hash.new {|hash, key| hash[key] = []}
+      @@secondary_index = Hash.new{|hash, key| hash[key] = {}}
 
       # Returns table executing all cql commands
       #
@@ -90,7 +91,9 @@ module CassandraComplex
       def schema
         attr = {}
         attributes.each{|x,y| attr[x] = y[:type]}
-        {:table => table_name, :attributes => attr, :primary_key => get_primary_key}
+        return_value = {:table => table_name, :attributes => attr, :primary_key => get_primary_key}
+        return_value.merge!(:secondary_index => @@secondary_index[self]) unless @@secondary_index[self].empty?
+        return_value
       end
 
       # Set primary key(s) for current Model
@@ -102,6 +105,16 @@ module CassandraComplex
                                                                        unless attributes.has_key?(attr_name.intern)
           @@primary_key[self] << attr_name.intern
         end
+      end
+
+      # Add secondary index for current Model
+      #
+      # @param [String] secondary_idx New secondary index
+      def secondary_index(secondary_idx, idx_name='')
+        raise WrongModelDefinition, 'Secondary index could be choosen just from already introduced attribute.'\
+                                                                       unless attributes.has_key?(secondary_idx.intern)
+        idx_name = self.to_s.downcase + '_' + secondary_idx.to_s + '_idx' if idx_name.empty?
+        @@secondary_index[self][idx_name] = secondary_idx.intern
       end
 
       # Introduce attribute for the Model.
