@@ -11,7 +11,8 @@ module CassandraComplex
   #     attribute :author, 'varchar'
   #     attribute :body, 'varchar'
   #
-  #     primary_key :user_id, :tweet_id
+  #     primary_key :user_id, :author_tweet_id
+  #
   #   end
   #
   #   class Tweet < CassandraComplex::Model
