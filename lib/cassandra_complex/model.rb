@@ -220,18 +220,25 @@ module CassandraComplex
       def create_table
         attrs = attributes.map{|x,y| "#{x.to_s} #{y[:type].to_s}"}.join(', ')
         p_key = ''
-        p_key = " PRIMARY KEY (#{get_primary_key.map{|x| x.to_s}.join(', ')})"
+        p_key = ", PRIMARY KEY (#{get_primary_key.map{|x| x.to_s}.join(', ')})"
+        s_idxs = []
+        s_idxs = @@secondary_index[self].collect{|k,v| "CREATE INDEX #{k} ON #{self.to_s.downcase} (#{v.to_s});"}
         create_table_command = <<-eos
-          CREATE TABLE table_name (
+          CREATE TABLE #{table_name} (
             #{attrs}
             #{p_key}
           );
         eos
         table_cql.execute(create_table_command)
+
+        s_idxs.each do |s_idx|
+          table_cql.execute(s_idx)
+        end
       end
 
       # Drop table for model within Cassandra
       def drop_table
+        # no need to drop secondary indexes, they will be deleted on drop table automatically
         drop_table_command = <<-eos
           DROP TABLE table_name;
         eos
