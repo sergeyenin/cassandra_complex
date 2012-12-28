@@ -23,7 +23,7 @@ class Tickets < CassandraComplex::Model
   secondary_index :owner
 end
 
-#CassandraComplex::Configuration.logger = Logger.new('/dev/null')
+#CassandraComplex::Configuration.logger = Logger.new(STDOUT)
 
 describe 'Model' do
 
@@ -200,6 +200,28 @@ describe 'Model' do
       TimelineModel.find({'user_id' => 'test_user0', 'tweet_id' => 1}).size.should  == 1
     end
 
+  end
+
+  context 'secondary indexes' do
+
+    before :all do
+      Tickets.create({:user_id => 10, :owner=> 'Tim Collins', :time => Time.now})
+      Tickets.create({:user_id => 11, :owner=> 'Harvey Wallbanger', :time => Time.now})
+      TimelineModel.create({'user_id' => 'test_user1', 'tweet_id' => 1, 'author' => 'test_author1', 'body' => 'test_body1'})
+    end
+
+    after :all do
+      Tickets.truncate
+      TimelineModel.truncate
+    end
+
+    it 'search by indexes' do
+      Tickets.find(:all, {:where=>['owner = ?', 'Tim Collins']}).size.should == 1
+    end
+
+    it 'doesn`t search without secondary indexes' do
+      TimelineModel.find(:all, {:where=>['author = ?', 'test_author1']}).size.should == 0
+    end
   end
 
 end

@@ -4,7 +4,7 @@ class TimelineTable < CassandraComplex::Table
   set_table_name 'timeline'
 end
 
-CassandraComplex::Configuration.logger = Logger.new(STDOUT)
+#CassandraComplex::Configuration.logger = Logger.new(STDOUT)
 
 describe 'Table' do
 
