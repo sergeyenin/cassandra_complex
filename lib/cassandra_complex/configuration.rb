@@ -49,7 +49,7 @@ module CassandraComplex
         @host = return_value['host']
         @default_keyspace = return_value['default_keyspace']
 
-        @logger = Logger.new('/dev/null')
+        @logger ||= Logger.new('/dev/null')
 
         return_value
       end
